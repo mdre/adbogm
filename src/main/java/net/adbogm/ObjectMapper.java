@@ -277,7 +277,7 @@ public class ObjectMapper {
             String prop = entry.getKey();
             if (!classdef.embeddedFields.containsKey(prop)) {
                 LOGGER.log(Level.TRACE, "Buscando campo {} de tipo {}...",
-                        new String[]{prop, entry.getValue().getSimpleName()});
+                        prop, entry.getValue().getSimpleName());
                 
                 if (entry.getValue().isAssignableFrom(Float.class))
                     this.setFieldValue(proxy, prop, v.getFloat(prop));
@@ -311,13 +311,13 @@ public class ObjectMapper {
         // ********************************************************************************************
         for (Map.Entry<String, Class<?>> entry : classdef.enumFields.entrySet()) {
             String prop = entry.getKey();
-            LOGGER.log(Level.TRACE, "Buscando campo {} ....", new String[]{prop});
+            LOGGER.log(Level.TRACE, "Buscando campo {} ....", prop);
             f = classdef.fieldsObject.get(prop);
             Object value = v.get(prop);
             LOGGER.log(Level.TRACE, "Enum field: {} type: {} value: {}",
                     new Object[]{f.getName(), f.getType(), value});
             setEnumField(proxy, f, value);
-            LOGGER.log(Level.TRACE, "hidratado campo: {}={}", new Object[]{prop, value});
+            LOGGER.log(Level.TRACE, "hidratado campo: {}={}", prop, value);
         }
 
         
@@ -439,7 +439,7 @@ public class ObjectMapper {
             try {
                 String field = entry.getKey();
                 Class<?> fc = entry.getValue();
-                LOGGER.log(Level.TRACE, "Field: {}   Class: {}", new String[]{field, fc.getName()});
+                LOGGER.log(Level.TRACE, "Field: {}   Class: {}", field, fc.getName());
                 fLink = classdef.fieldsObject.get(field);
                 
                 String graphRelationName;
@@ -580,7 +580,7 @@ public class ObjectMapper {
      */
     private void collectionToEmbedded(Object o, Field f, Object value) {
         try {
-            LOGGER.log(Level.TRACE, "Procesando campo: {} type: {}", new String[]{f.getName(), f.getType().getName()});
+            LOGGER.log(Level.TRACE, "Procesando campo: {} type: {}", f.getName(), f.getType().getName());
             // realizar la conversión solo si el campo tiene un valor.
             if (value != null && List.class.isAssignableFrom(f.getType())) {
                 LOGGER.log(Level.TRACE, "convirtiendo en ArrayListEmbeddedProxy...");
@@ -599,7 +599,7 @@ public class ObjectMapper {
      */
     private void collectionToEmbedded(Object o, Field f) {
         try {
-            LOGGER.log(Level.TRACE, "Processing field: {} type: {}", new String[]{f.getName(), f.getType().getName()});
+            LOGGER.log(Level.TRACE, "Processing field: {} type: {}", f.getName(), f.getType().getName());
             // realizar la conversión solo si el campo tiene un valor.
             if (List.class.isAssignableFrom(f.getType())) {
                 LOGGER.log(Level.TRACE, "converting into empty ArrayListEmbeddedProxy...");

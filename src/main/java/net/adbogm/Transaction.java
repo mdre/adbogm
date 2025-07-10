@@ -798,7 +798,7 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
     private void deleteTree(Object toRemove) throws UnknownObject {
         //initInternalTx();
         String ridToRemove = ((IObjectProxy) toRemove).___getVertex().getIdentity().toString();
-        LOGGER.log(Level.DEBUG, "Remove: {}:{}", new String[]{toRemove.getClass().getName(),ridToRemove});
+        LOGGER.log(Level.DEBUG, "Remove: {}:{}", toRemove.getClass().getName(),ridToRemove);
 
         // si no hereda de IObjectProxy, el objeto no pertenece a la base y no se debe hacer nada.
         if (toRemove instanceof IObjectProxy) {
@@ -1032,18 +1032,18 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
             // reacargar preventivamente el objeto.
             //LOGGER.log(Level.TRACE, "pre-reload:  --(in: " + ovToRemove.countEdges(ODirection.IN) + ")-->( "+logRidToRemove + ")--(out: "+ ovToRemove.countEdges(ODirection.OUT)+"  )---->   ");            
             LOGGER.log(Level.DEBUG, "pre reload {} IN: {} OUT: {}", 
-                        new String[]{ovToRemove.getIdentity().toString(),
+                        ovToRemove.getIdentity().toString(),
                                      (""+ovToRemove.countEdges(Vertex.DIRECTION.IN, null)),
                                      (""+ovToRemove.countEdges(Vertex.DIRECTION.OUT, null))
-                        });
+                        );
             ovToRemove.reload();
             //LOGGER.log(Level.TRACE, "post-reload:  --(in: " + ovToRemove.countEdges(ODirection.IN) + ")-->( "+logRidToRemove + ")--(out: "+ ovToRemove.countEdges(Direction.OUT)+"  )---->   ");            
             
             LOGGER.log(Level.DEBUG, "Referencias {} IN: {} OUT: {}", 
-                        new String[]{ovToRemove.getIdentity().toString(),
+                        ovToRemove.getIdentity().toString(),
                                      (""+ovToRemove.countEdges(Vertex.DIRECTION.IN, null)),
                                      (""+ovToRemove.countEdges(Vertex.DIRECTION.OUT, null))
-                        });
+                        );
             if (ovToRemove.countEdges(Vertex.DIRECTION.IN, null)>0) {
                 //closeInternalTx();
                 throw new ReferentialIntegrityViolation(ovToRemove, this);
@@ -1366,6 +1366,8 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
             
             // si ret == null, recuperar el objeto desde la base, en caso contrario devolver el objeto desde el caché
             if (ret == null) {
+                this.begin();
+                
                 Vertex v = null;
                 try {
                     v = this.arcadedbTransact.lookupByRID(new RID(arcadedbTransact, rid)).asVertex();
@@ -1470,6 +1472,7 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
             o = (T) this.transactionLoopCache.get(rid);
 
             if (o == null) {
+                this.begin();
                 // recuperar el vértice solicitado
                 Vertex v = this.arcadedbTransact.lookupByRID(new RID(arcadedbTransact, rid)).asVertex();
                 if (v == null) {

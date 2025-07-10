@@ -226,9 +226,4 @@ public class HashMapEmbeddedProxy extends HashMap<Object, Object> implements IEm
         return super.equals(o); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize(); //To change body of generated methods, choose Tools | Templates.
-    }
-
 }

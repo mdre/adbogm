@@ -579,11 +579,5 @@ public class VectorLazyProxy extends Vector implements ILazyCollectionCalls {
         return super.stream(); 
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-//        if (lazyLoad)
-//            this.lazyLoad();
-        super.finalize(); 
-    }
     
 }

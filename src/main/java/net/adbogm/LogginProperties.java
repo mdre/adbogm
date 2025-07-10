@@ -24,7 +24,7 @@ public class LogginProperties {
     public static Level ObjectProxyFactory          = Level.INFO;
     public static Level ObjectStruct                = Level.INFO;
     public static Level ReflectionUtils             = Level.INFO;
-    public static Level SessionManager              = Level.ALL;
+    public static Level SessionManager              = Level.INFO;
     public static Level SimpleCache                 = Level.INFO;
     public static Level VectorLazyProxy             = Level.INFO;
     public static Level VertexUtils                 = Level.INFO;

@@ -608,8 +608,8 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                     direction = DIRECTION.OUT;
                 }
                 LOGGER.log(Level.DEBUG, "Field: {}.{}   Class: {}  RelationName: {}",
-                        new String[]{this.___baseClass.getSimpleName(), field,
-                            fc.getSimpleName(), graphRelationName});
+                        this.___baseClass.getSimpleName(), field,
+                            fc.getSimpleName(), graphRelationName);
                 
                 boolean duplicatedLinkGuard = false;
                 
@@ -1034,9 +1034,9 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
 
                                         // vincular el nodo
                                         //MutableEdge oe = this.___transaction.getCurrentGraphDb().addEdge("class:" + graphRelationName, this.___getVertex(), ((IObjectProxy) colObject).___getVertex(), graphRelationName);
-                                        LOGGER.log(Level.TRACE, "creando nueve edge {} --> {}",new String[]{this.___baseElement.getIdentity().toString(),
+                                        LOGGER.log(Level.TRACE, "creando nueve edge {} --> {}",this.___baseElement.getIdentity().toString(),
                                                                                                                         ((IObjectProxy) colObject).___getVertex().getIdentity().toString()
-                                                                                                                        });
+                                                                                                                        );
                                         MutableEdge oe = this.___getVertex().newEdge(graphRelationName, ((IObjectProxy) colObject).___getVertex());
                                         oe.save();
                                         if (this.___transaction.isAuditing()) {
@@ -1049,12 +1049,12 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                 for (Map.Entry<Object, ObjectCollectionState> entry1 : colState.entrySet()) {
                                     Object colObject = entry1.getKey();
                                     ObjectCollectionState colObjState = entry1.getValue();
-                                    LOGGER.log(Level.TRACE, "{} : {}", new String[]{
+                                    LOGGER.log(Level.TRACE, "{} : {}", 
                                                                                             colObject.toString(),
                                                                                             colObjState.toString()
-                                                                                            });
+                                                                                            );
                                     if (colObjState == ObjectCollectionState.REMOVED) {
-                                        LOGGER.log(Level.TRACE, "objeto borrado: {}", new String[]{((IObjectProxy) colObject).___getVertex().getIdentity().toString()});
+                                        LOGGER.log(Level.TRACE, "objeto borrado: {}", ((IObjectProxy) colObject).___getVertex().getIdentity().toString());
                                         // remover el link
                                         // for (MutableEdge edge : ((MutableVertex) this.___baseElement)
                                         //        .getEdges(((IObjectProxy) colObject).___getVertex(),
@@ -1064,7 +1064,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                         Iterator<Edge> edges = ((MutableVertex) this.___baseElement).getEdges(DIRECTION.OUT, graphRelationName).iterator(); 
                                         while (edges.hasNext()){
                                             MutableEdge edge = edges.next().modify();
-                                            LOGGER.log(Level.TRACE, "edge in: {} -- out --> {}",new String[]{edge.getIn().toString(),edge.getOut().toString()});
+                                            LOGGER.log(Level.TRACE, "edge in: {} -- out --> {}",edge.getIn().toString(),edge.getOut().toString());
                                             if (edge.getIn().toString().equals(((IObjectProxy) colObject).___getVertex().getIdentity().toString())) {
                                                 if (this.___transaction.isAuditing()) {
                                                     this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"LINKLIST REMOVE: " + graphRelationName, edge);
@@ -1362,7 +1362,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
         LOGGER.log(Level.DEBUG, "Reverting enums...");
         for (Map.Entry<String, Class<?>> entry : classdef.enumFields.entrySet()) {
             String prop = entry.getKey();
-            LOGGER.log(Level.DEBUG, "Buscando campo {} ....", new String[]{prop});
+            LOGGER.log(Level.DEBUG, "Buscando campo {} ....", prop);
             Object value = this.___baseElement.get(prop);
             try {
                 f = classdef.fieldsObject.get(prop);
@@ -1406,7 +1406,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
         for (Map.Entry<String, Class<?>> entry : classdef.linkLists.entrySet()) {
             String field = entry.getKey();
             Class<?> fc = entry.getValue();
-            LOGGER.log(Level.DEBUG, "Field: {}   Class: {}", new String[]{field, fc.getName()});
+            LOGGER.log(Level.DEBUG, "Field: {}   Class: {}", field, fc.getName());
 
             Field fLink = classdef.fieldsObject.get(field);
             Object coll = objectMapper.getFieldValue(this.___proxiedObject, fLink);

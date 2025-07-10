@@ -247,13 +247,6 @@ public class ArrayListLazyProxy extends ArrayList implements ILazyCollectionCall
         return super.stream(); //To change body of generated methods, choose Tools | Templates.
     }
     
-    @Override
-    protected void finalize() throws Throwable {
-//        if (lazyLoad) {
-//            this.lazyLoad();
-//        }
-        super.finalize(); //To change body of generated methods, choose Tools | Templates.
-    }
 
     @Override
     public void sort(Comparator c) {

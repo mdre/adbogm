@@ -142,7 +142,7 @@ public class SessionManagerTest {
         LOGGER.info("Ignored:");
         TransparentDirtyDetectorAgent.get().getIgnored().stream().forEach(d ->{LOGGER.info(d);});
         LOGGER.info("----");
-        TransparentDirtyDetectorAgent.get().enableDumpDebugDirectory("/tmp/asm");
+//        TransparentDirtyDetectorAgent.get().enableDumpDebugDirectory("/tmp/asm");
         
         SimpleVertex sv = new SimpleVertex();
         //verificar que el agente esté funcionando.
@@ -1383,10 +1383,11 @@ public class SessionManagerTest {
 
         Transaction t1 = this.sm.getTransaction();
         Transaction t2 = this.sm.getTransaction();
-
+        t2.begin();
+        
         SimpleVertex sv = new SimpleVertex();
         SimpleVertex expResultT1 = sv;
-
+        
         assertEquals(0, t1.getDirtyCount());
 
         SimpleVertex result = t1.store(sv);
@@ -1399,6 +1400,7 @@ public class SessionManagerTest {
 
         LOGGER.log(Level.INFO, "COMMIT en t1");
         t1.commit();
+        t1.begin();
         LOGGER.log(Level.INFO, "t1.isOpen: {}",t1.getCurrentGraphDb().isOpen());
         assertEquals(0, t1.getDirtyCount());
         assertEquals(0, t2.getDirtyCount());
@@ -1407,6 +1409,9 @@ public class SessionManagerTest {
         String rid = ((IObjectProxy) result).___getRid();
         LOGGER.info("RID: " + rid);
 
+        //limpiar el cache
+        t1.clearCache();
+        
         expResultT1 = t1.get(SimpleVertex.class, rid);
 
         assertEquals(0, t1.getDirtyCount());
@@ -1437,6 +1442,7 @@ public class SessionManagerTest {
 
         // hacer un commit en T1 y provocar la falla en T2
         t1.commit();
+        t1.begin();
         LOGGER.log(Level.INFO, "post commit t1.isOpen: {}  isActive: {}",t1.getCurrentGraphDb().isOpen(), t1.getCurrentGraphDb().isTransactionActive());
         
         Vertex vt1 = t1.getCurrentGraphDb().lookupByRID(new com.arcadedb.database.RID(rid)).asVertex();

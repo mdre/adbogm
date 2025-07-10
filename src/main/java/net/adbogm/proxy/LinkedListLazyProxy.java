@@ -682,12 +682,5 @@ public class LinkedListLazyProxy extends LinkedList implements ILazyCollectionCa
         super.forEach(action);
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-//        if (lazyLoad) {
-//            this.lazyLoad();
-//        }
-        super.finalize();
-    }
 
 }
