@@ -1,23 +1,25 @@
+// DSL Gradle 7.0
 plugins {
     id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+
     // https://plugins.gradle.org/plugin/net.researchgate.release
     // id 'net.researchgate.release' version '2.8.1'
     // https://plugins.gradle.org/plugin/nu.studer.credentials
-    id 'nu.studer.credentials' version '2.1'
+    id 'nu.studer.credentials' version '3.0'
     // https://plugins.gradle.org/plugin/io.codearte.nexus-staging
     // id 'io.codearte.nexus-staging' version '0.30.0'
 
     //https://github.com/gradle-nexus/publish-plugin/
-    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
-
-    id 'maven-publish'
-    id 'signing'
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 //OrientDB version to use:
-ext.arcadeDbVersion = '21.10.1'
+//ext.arcadeDbVersion = '25.5.1'
+ext.arcadeDbVersion = '25.6.1'
 
-
+ 
 // ejecutar: gradle idea 
 // para que inicialize el proyecto y baje los javadocs.
 apply plugin: 'idea'
@@ -40,8 +42,8 @@ def info() {
 compileJava {
 //    options.compilerArgs << '-Xlint:deprecation'
 //    options.compilerArgs << '-Xlint:unchecked'
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 // Para hace el deploy en Sonatype
@@ -60,8 +62,8 @@ compileJava {
 //gradle addCredentials -PcredentialsKey=nexusPassword -PcredentialsValue=YYYYY -PcredentialsPassphrase=zzzzzzzz
 //def nexusUser = credentials.nexusUser
 //def nexusPassword = credentials.nexusPassword
-def sonatypeUser = credentials.sonatypeUser
-def sonatypePassword = credentials.sonatypePassword
+def sonatypeUser = credentials.forKey("sonatypeUser")
+def sonatypePassword = credentials.forKey("sonatypePassword")
 
 
 // incrementar automáticamente el buildNumber
@@ -95,20 +97,11 @@ task autoBuildNumber {
 
 
 // agregar la dependencia solo si no se trata de un release
-if (! project.gradle.startParameter.taskNames.join(",").toLowerCase().contains("release") ) {
-    build.dependsOn autoBuildNumber
+if (! (project.gradle.startParameter.taskNames.join(",").toLowerCase().contains("release")
+       || project.gradle.startParameter.taskNames.join(",").toLowerCase().contains("sabn")) 
+   ) {
+    build.configure{dependsOn autoBuildNumber} 
 }
-
-build.doLast {
-    info()
-}
-
-// seteo carpeta de fuentes para sonar
-//sonarqube {
-//    properties {
-//        property "sonar.sources", "src/main"
-//    }
-//}
 
 // desactivo la generación de javadoc en los proyectos que tengan la tarea
 javadoc.enabled = true
@@ -128,36 +121,41 @@ repositories {
     
 
 dependencies {
-    implementation "cglib:cglib:3.3.0"
-    implementation "com.github.mdre:odbogm-agent:1.1.+"
+    api "com.github.mdre:EasyProxy:1.+"
+
+    implementation "com.github.mdre:tdd-agent:0.+"
     
     api "com.arcadedb:arcadedb-engine:${arcadeDbVersion}"
+    api "com.arcadedb:arcadedb-server:${arcadeDbVersion}"
     //api "com.orientechnologies:orientdb-core:${orientDbVersion}:sources"
     
     testImplementation "junit:junit:[4,)"
     testImplementation "org.easymock:easymock:4.0.2"
+    
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.23.1'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.23.1'
 }
 
 //task to find the path of the ogm agent automatically:
 task findAgentPath {
     configurations.runtimeClasspath.files.each {
-        if (it.getName().contains('odbogm-agent')) {
-            project.ext.setProperty('odbogmAgentPath', it.toString())
+        if (it.getName().contains('tdd-agent')) {
+            project.ext.setProperty('tddAgentPath', it.toString())
+            println "agente encontrado en: ${project.tddAgentPath}"
         }
     }
 }
 
 test {
     dependsOn findAgentPath
-    jvmArgs '-Djdk.attach.allowAttachSelf=true', '-DridBag.embeddedToSbtreeBonsaiThreshold=-1'
-    jvmArgs += "-javaagent:${project.odbogmAgentPath}"
+    jvmArgs '-Djdk.attach.allowAttachSelf=true'
+    jvmArgs += "-javaagent:${project.tddAgentPath}=net.adbogm.annotations.Entity"
     outputs.upToDateWhen { false }
     testLogging {
         // Make sure output from
         // standard out or error is shown
         // in Gradle output.
         showStandardStreams = true
- 
         // Or we use events method:
         // events 'standard_out', 'standard_error'
  
@@ -169,6 +167,11 @@ test {
         // events org.gradle.api.tasks.testing.logging.TestLogEvent.STANDARD_OUT,
         //        org.gradle.api.tasks.testing.logging.TestLogEvent.STANDARD_ERROR,
     }
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 //jar {
@@ -195,50 +198,78 @@ task fatJar(type: Jar) {
     //      'Can-Retransform-Classes':true
     //        )
     //    }
-    baseName = project.name + '-all'
+    archiveBaseName = project.name + '-all'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
 
 
-// de acuerdo a la guía de 
-// http://central.sonatype.org/pages/gradle.html
-java {
-    withJavadocJar()
-    withSourcesJar()
+javadoc {
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
 }
 
-nexusPublishing {
-    repositories {
-        sonatype()
+signing {
+    if (project.gradle.startParameter.taskNames.join(",").toLowerCase().contains("release")) {
+        //required { gradle.taskGraph.hasTask("uploadArchives")}
+
+        //    ext."signing.keyId"= credentials.gpgKeyId
+        //    ext."signing.password"= credentials.gpgKeyPassword
+        //    ext."signing.secretKeyRingFile" = credentials.gpgKeyRingFile                
+
+        //    println ext."signing.keyId"
+
+        sign(configurations.archives)
     }
 }
 
 
+nexusPublishing {
+    repositories {
+        //sonatype()
+        sonatype {
+            username = sonatypeUser
+            password = sonatypePassword
+        }
+    }
+}
+
+
+// para publicar en sonatype:
+// gradle publishToSonatype closeAndReleaseSonatypeStagingRepository sabn
 publishing {
     publications {
         mavenJava(MavenPublication) {
             //artifactId = 'my-library'
             from components.java
-            versionMapping {
-                usage('java-api') {
-                    fromResolutionOf('runtimeClasspath')
-                }
-                usage('java-runtime') {
-                    fromResolutionResult()
-                }
-            }
+        
+            // versionMapping {
+            //     usage('java-api') {
+            //         fromResolutionOf('runtimeClasspath')
+            //     }
+            //     usage('java-runtime') {
+            //         fromResolutionResult()
+            //     }
+            // }
             pom {
-                name = 'Java Object to ArcadeDB Graph Mapper'
-                packaging = 'jar'
-                // optionally artifactId can be defined here 
-                description = 'ABOGM let you store/retrieve objects in a ArcadeDB graph structure in a clear and simple way.'
+                name = "$artifactId"
+                description  = "$description"
                 url = 'https://github.com/mdre/adbogm'
+                
+                // packaging = 'jar'
+                // optionally artifactId can be defined here 
 
                 // properties = [
                 //     myProp: "value",
                 //     "prop.with.dots": "anotherValue"
                 // ]
+                scm {
+                    connection = 'scm:git:git://github.com/mdre/adbogm.git'
+                    developerConnection = 'scm:git:ssh://github.com/mdre/adbogm.git'
+                    url = 'https://github.com/mdre/adbogm'
+                }
+
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
@@ -252,11 +283,6 @@ publishing {
                         email = 'marcelo.re@gmail.com'
                     }
                 }
-                scm {
-                    connection = 'scm:git:git://github.com/mdre/adbogm.git'
-                    developerConnection = 'scm:git:ssh://github.com/mdre/adbogm.git'
-                    url = 'https://github.com/mdre/adbogm'
-                }
             }
         }
     }
@@ -267,13 +293,16 @@ signing {
     sign publishing.publications.mavenJava
 }
 
-
-javadoc {
-    if(JavaVersion.current().isJava9Compatible()) {
-        options.addBooleanOption('html5', true)
-    }
+// NetBeans will automatically add "run" and "debug" tasks relying on the
+// "mainClass" property. You may however define the property prior executing
+// tasks by passing a "-PmainClass=<QUALIFIED_CLASS_NAME>" argument.
+//
+// Note however, that you may define your own "run" and "debug" task if you
+// prefer. In this case NetBeans will not add these tasks but you may rely on
+// your own implementation.
+if (!hasProperty('mainClass')) {
+    ext.mainClass = ''
 }
-
 
 
 task runFile(dependsOn: 'classes',type:JavaExec) {
@@ -295,3 +324,15 @@ task debug(dependsOn: 'classes',type:JavaExec) {
         debug true
     }
 }
+
+// ************************************************************************************
+// Imprimir el listado de dependencias
+// ************************************************************************************
+task printDep (){
+    println("Dependencies: ")
+    configurations.compileClasspath.resolvedConfiguration.firstLevelModuleDependencies.each { dep ->
+        println dep
+    }
+}
+
+

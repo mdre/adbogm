@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.odbogm.annotations.DontLoadLinks;
-import net.odbogm.annotations.Eager;
-import net.odbogm.annotations.Entity;
-import net.odbogm.annotations.Indirect;
+import net.adbogm.annotations.DontLoadLinks;
+import net.adbogm.annotations.Eager;
+import net.adbogm.annotations.Entity;
+import net.adbogm.annotations.Indirect;
 
 /**
  *

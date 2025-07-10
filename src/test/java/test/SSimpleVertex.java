@@ -1,7 +1,7 @@
 package test;
 
-import net.odbogm.annotations.Entity;
-import net.odbogm.security.SObject;
+import net.adbogm.annotations.Entity;
+import net.adbogm.security.SObject;
 
 /**
  *

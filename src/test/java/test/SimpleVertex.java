@@ -1,15 +1,15 @@
 package test;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
-import net.odbogm.annotations.Ignore;
+import net.adbogm.annotations.Ignore;
 import java.util.logging.Logger;
-import net.odbogm.annotations.Audit;
-import net.odbogm.annotations.Entity;
-import net.odbogm.annotations.RID;
-import net.odbogm.annotations.Sequence;
-import net.odbogm.annotations.Version;
+import net.adbogm.annotations.Audit;
+import net.adbogm.annotations.Entity;
+import net.adbogm.annotations.RID;
+import net.adbogm.annotations.Sequence;
+import net.adbogm.annotations.Version;
 
 /**
  *
@@ -28,14 +28,14 @@ public class SimpleVertex {
     public int i;
     private float f;
     private boolean b;
-    private Date fecha;
+    private LocalDateTime fecha;
     @Sequence(sequenceName = "test_sequence") private final Long serial = null;
     
-    public Date getFecha() {
+    public LocalDateTime getFecha() {
         return fecha;
     }
 
-    public void setFecha(Date fecha) {
+    public void setFecha(LocalDateTime fecha) {
         this.fecha = fecha;
     }
     

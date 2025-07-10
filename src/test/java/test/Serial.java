@@ -1,7 +1,7 @@
 package test;
 
-import net.odbogm.annotations.Entity;
-import net.odbogm.annotations.Sequence;
+import net.adbogm.annotations.Entity;
+import net.adbogm.annotations.Sequence;
 
 /**
  *

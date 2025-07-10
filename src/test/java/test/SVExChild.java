@@ -1,7 +1,7 @@
 package test;
 
 import java.util.HashMap;
-import net.odbogm.annotations.Entity;
+import net.adbogm.annotations.Entity;
 
 /**
  *

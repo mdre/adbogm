@@ -1,721 +1,207 @@
-script sql
-
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'EdgeAttrib';
-if ($exist.size() > 0) {
-    delete edge EdgeAttrib;
-    drop class EdgeAttrib;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'IndirectObject';
-if ($exist.size() > 0) {
-    delete vertex IndirectObject;
-    drop class IndirectObject;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'UserSID';
-if ($exist.size() > 0) {
-    delete vertex UserSID;
-    drop class UserSID;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'GroupSID';
-if ($exist.size() > 0) {
-    delete vertex GroupSID;
-    drop class GroupSID;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SObject';
-if ($exist.size() > 0) {
-    delete vertex SObject;
-    drop class SObject;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SSimpleVertex';
-if ($exist.size() > 0) {
-    delete vertex SSimpleVertex;
-    drop class SSimpleVertex;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertex';
-if ($exist.size() > 0) {
-    delete vertex SimpleVertex;
-    drop class SimpleVertex;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexInterfaceAttr';
-if ($exist.size() > 0) {
-    delete vertex SimpleVertexInterfaceAttr;
-    drop class SimpleVertexInterfaceAttr;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexWithEmbedded';
-if ($exist.size() > 0) {
-    delete vertex SimpleVertexWithEmbedded;
-    drop class SimpleVertexWithEmbedded;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexWithImplement';
-if ($exist.size() > 0) {
-    delete vertex SimpleVertexWithImplement;
-    drop class SimpleVertexWithImplement;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'FooNode';
-if ($exist.size() > 0) {
-    delete vertex FooNode;
-    drop class FooNode;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'Enums';
-if ($exist.size() > 0) {
-    delete vertex Enums;
-    drop class Enums;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx';
-if ($exist.size() > 0) {
-    delete vertex SimpleVertexEx;
-    drop class SimpleVertexEx;
-}
-*/
-/*
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SVExChild';
-if ($exist.size() > 0) {
-    delete vertex SVExChild;
-    drop class SVExChild;
-}
-*/
-let exist = select from (select expand(classes) from metadata:schema) where name = 'EdgeAttrib';
-if ($exist.size() = 0) {
-    create class EdgeAttrib extends E;
-}
-alter class EdgeAttrib custom javaClass='test.EdgeAttrib';
+create vertex type IndirectObject if not exists;
+alter type IndirectObject custom javaClass='test.IndirectObject';
+create property IndirectObject.testData if not exists STRING;
 
 
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'EdgeAttrib') where name = 'uuid';
-if ($exist.size()=0) {
-    create property EdgeAttrib.uuid STRING;
-}
+create vertex type SimpleVertex if not exists;
+alter type SimpleVertex custom javaClass='test.SimpleVertex';
 
+create property SimpleVertex.uuid if not exists STRING;
+create property SimpleVertex.s  if not exists  STRING;
+create property SimpleVertex.i  if not exists  INTEGER;
+create property SimpleVertex.f  if not exists FLOAT;
+create property SimpleVertex.b  if not exists BOOLEAN;
+create property SimpleVertex.fecha  if not exists  DATETIME;
+create property SimpleVertex.serial  if not exists LONG;
+create property SimpleVertex.oI  if not exists INTEGER;
+create property SimpleVertex.oF  if not exists FLOAT;
+create property SimpleVertex.oB  if not exists  BOOLEAN;
 
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'EdgeAttrib') where name = 'nota';
-if ($exist.size()=0) {
-    create property EdgeAttrib.nota STRING;
-}
+create edge type EdgeAttrib if not exists;
+alter type EdgeAttrib custom javaClass='test.EdgeAttrib';
+create property EdgeAttrib.uuid if not exists STRING;
+create property EdgeAttrib.nota  if not exists STRING;
+create property EdgeAttrib.fecha  if not exists DATETIME;
+create property EdgeAttrib.enumValue  if not exists string;
  
+create vertex type IndirectObject  if not exists;
+alter type IndirectObject custom javaClass='test.IndirectObject';
+create property IndirectObject.testData  if not exists STRING;
 
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'EdgeAttrib') where name = 'fecha';
-if ($exist.size()=0) {
-    create property EdgeAttrib.fecha DATETIME;
-}
- 
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'EdgeAttrib') where name = 'enumValue';
-if ($exist.size()=0) {
-    create property EdgeAttrib.enumValue string;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'IndirectObject';
-if ($exist.size() = 0) {
-    create class IndirectObject extends V;
-}
-alter class IndirectObject custom javaClass='test.IndirectObject';
-
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'IndirectObject') where name = 'testData';
-if ($exist.size()=0) {
-    create property IndirectObject.testData STRING;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'IndirectObject_directLink';
-if ($exist.size()=0) {
-    create class IndirectObject_directLink extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'IndirectObject_alDirectLinked';
-if ($exist.size()=0) {
-    create class IndirectObject_alDirectLinked extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'IndirectObject_hmDirectLinked';
-if ($exist.size()=0) {
-    create class IndirectObject_hmDirectLinked extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'IndirectObject_indirectLink';
-if ($exist.size()=0) {
-    create class IndirectObject_indirectLink extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'IndirectObject_indirectLinkedFromAL';
-if ($exist.size()=0) {
-    create class IndirectObject_indirectLinkedFromAL extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'IndirectObject_alIndirectLinked';
-if ($exist.size()=0) {
-    create class IndirectObject_alIndirectLinked extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'IndirectObject_hmIndirectLinked';
-if ($exist.size()=0) {
-    create class IndirectObject_hmIndirectLinked extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'UserSID';
-if ($exist.size() = 0) {
-    create class UserSID extends V;
-}
-alter class UserSID custom javaClass='net.odbogm.security.UserSID';
-
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'UserSID') where name = 'name';
-if ($exist.size()=0) {
-    create property UserSID.name STRING;
-}
- 
-
-let exist = select from(select expand(indexes) from metadata:indexmanager) where name = 'UserSID.name';
-if ($exist.size()=0) {
-    create index UserSID.name on UserSID(name) UNIQUE;
-}
- 
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'UserSID') where name = 'uuid';
-if ($exist.size()=0) {
-    create property UserSID.uuid STRING;
-}
- 
-
-let exist = select from(select expand(indexes) from metadata:indexmanager) where name = 'UserSID.uuid';
-if ($exist.size()=0) {
-    create index UserSID.uuid on UserSID(uuid) UNIQUE;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'UserSID_groups';
-if ($exist.size()=0) {
-    create class UserSID_groups extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'GroupSID';
-if ($exist.size() = 0) {
-    create class GroupSID extends V;
-}
-alter class GroupSID custom javaClass='net.odbogm.security.GroupSID';
-
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'GroupSID') where name = 'name';
-if ($exist.size()=0) {
-    create property GroupSID.name STRING;
-}
- 
-
-let exist = select from(select expand(indexes) from metadata:indexmanager) where name = 'GroupSID.name';
-if ($exist.size()=0) {
-    create index GroupSID.name on GroupSID(name) UNIQUE;
-}
- 
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'GroupSID') where name = 'uuid';
-if ($exist.size()=0) {
-    create property GroupSID.uuid STRING;
-}
- 
-
-let exist = select from(select expand(indexes) from metadata:indexmanager) where name = 'GroupSID.uuid';
-if ($exist.size()=0) {
-    create index GroupSID.uuid on GroupSID(uuid) UNIQUE;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'GroupSID_participants';
-if ($exist.size()=0) {
-    create class GroupSID_participants extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'GroupSID_addedTo';
-if ($exist.size()=0) {
-    create class GroupSID_addedTo extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SObject';
-if ($exist.size() = 0) {
-    create class SObject extends V;
-}
-alter class SObject custom javaClass='net.odbogm.security.SObject';
-
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SObject___owner';
-if ($exist.size()=0) {
-    create class SObject___owner extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SObject___acl';
-if ($exist.size()=0) {
-    create class SObject___acl extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SObject___inherit';
-if ($exist.size()=0) {
-    create class SObject___inherit extends E;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SSimpleVertex';
-if ($exist.size() = 0) {
-    create class SSimpleVertex extends SObject;
-}
-alter class SSimpleVertex custom javaClass='test.SSimpleVertex';
-
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SSimpleVertex') where name = 's';
-if ($exist.size()=0) {
-    create property SSimpleVertex.s STRING;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SSimpleVertex___owner';
-if ($exist.size()=0) {
-    create class SSimpleVertex___owner extends SObject___owner;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SSimpleVertex___acl';
-if ($exist.size()=0) {
-    create class SSimpleVertex___acl extends SObject___acl;
-}
- 
+create edge type IndirectObject_directLink  if not exists;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SSimpleVertex___inherit';
-if ($exist.size()=0) {
-    create class SSimpleVertex___inherit extends SObject___inherit;
-}
- 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertex';
-if ($exist.size() = 0) {
-    create class SimpleVertex extends V;
-}
-alter class SimpleVertex custom javaClass='test.SimpleVertex';
-
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertex') where name = 'uuid';
-if ($exist.size()=0) {
-    create property SimpleVertex.uuid STRING;
-}
- 
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertex') where name = 's';
-if ($exist.size()=0) {
-    create property SimpleVertex.s STRING;
-}
- 
+create edge type IndirectObject_alDirectLinked  if not exists;
 
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertex') where name = 'i';
-if ($exist.size()=0) {
-    create property SimpleVertex.i INTEGER;
-}
+create edge type IndirectObject_hmDirectLinked  if not exists;
  
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertex') where name = 'f';
-if ($exist.size()=0) {
-    create property SimpleVertex.f FLOAT;
-}
+create edge type IndirectObject_indirectLink  if not exists;
  
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertex') where name = 'b';
-if ($exist.size()=0) {
-    create property SimpleVertex.b BOOLEAN;
-}
+create edge type IndirectObject_indirectLinkedFromAL  if not exists;
  
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertex') where name = 'fecha';
-if ($exist.size()=0) {
-    create property SimpleVertex.fecha DATETIME;
-}
-
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertex') where name = 'serial';
-if ($exist.size()=0) {
-    create property SimpleVertex.serial LONG;
-}
+create edge type IndirectObject_alIndirectLinked  if not exists;
  
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertex') where name = 'oI';
-if ($exist.size()=0) {
-    create property SimpleVertex.oI INTEGER;
-}
+create edge type IndirectObject_hmIndirectLinked  if not exists;
  
+create vertex type UserSID if not exists;
+alter type UserSID custom javaClass='net.odbogm.security.UserSID';
+create property UserSID.name if not exists STRING;
+create index if not exists on UserSID (name) UNIQUE;
+create property UserSID.uuid  if not exists STRING;
+create index if not exists on UserSID(uuid) UNIQUE;
 
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertex') where name = 'oF';
-if ($exist.size()=0) {
-    create property SimpleVertex.oF FLOAT;
-}
- 
+create edge type UserSID_groups  if not exists;
 
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertex') where name = 'oB';
-if ($exist.size()=0) {
-    create property SimpleVertex.oB BOOLEAN;
-}
+create vertex type GroupSID  if not exists;
+alter type GroupSID custom javaClass='net.odbogm.security.GroupSID';
+create property GroupSID.name  if not exists STRING;
+create index if not exists on GroupSID(name) UNIQUE;
+create property GroupSID.uuid  if not exists STRING;
+create index if not exists on GroupSID(uuid) UNIQUE;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexInterfaceAttr';
-if ($exist.size() = 0) {
-    create class SimpleVertexInterfaceAttr extends SimpleVertex;
-}
-alter class SimpleVertexInterfaceAttr custom javaClass='test.SimpleVertexInterfaceAttr';
 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexInterfaceAttr_itest';
-if ($exist.size()=0) {
-    create class SimpleVertexInterfaceAttr_itest extends E;
-}
+create edge type GroupSID_participants  if not exists;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexInterfaceAttr_iList';
-if ($exist.size()=0) {
-    create class SimpleVertexInterfaceAttr_iList extends E;
-}
+create edge type GroupSID_addedTo  if not exists;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexWithEmbedded';
-if ($exist.size() = 0) {
-    create class SimpleVertexWithEmbedded extends V;
-}
-alter class SimpleVertexWithEmbedded custom javaClass='test.SimpleVertexWithEmbedded';
-
+create vertex type SObject  if not exists ;
+alter type SObject custom javaClass='net.odbogm.security.SObject';
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexWithEmbedded_stringlist';
-if ($exist.size()=0) {
-    create class SimpleVertexWithEmbedded_stringlist extends E;
-}
+create edge type SObject___owner  if not exists;
  
+create edge type SObject___acl  if not exists ;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexWithEmbedded_simplemap';
-if ($exist.size()=0) {
-    create class SimpleVertexWithEmbedded_simplemap extends E;
-}
+create edge type SObject___inherit  if not exists;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexWithImplement';
-if ($exist.size() = 0) {
-    create class SimpleVertexWithImplement extends SimpleVertex;
-}
-alter class SimpleVertexWithImplement custom javaClass='test.SimpleVertexWithImplement';
-
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'FooNode';
-if ($exist.size() = 0) {
-    create class FooNode extends V;
-}
-alter class FooNode custom javaClass='test.Foo';
-
+create vertex type SSimpleVertex if not exists extends SObject;
+alter type SSimpleVertex custom javaClass='test.SSimpleVertex';
+create property SSimpleVertex.s if not exists STRING;
 
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'FooNode') where name = 'text';
-if ($exist.size()=0) {
-    create property FooNode.text STRING;
-}
+create edge type SSimpleVertex___owner if not exists extends SObject___owner;
  
+create edge type SSimpleVertex___acl if not exists extends SObject___acl;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'FooNode_lsve';
-if ($exist.size()=0) {
-    create class FooNode_lsve extends E;
-}
+create edge type SSimpleVertex___inherit if not exists extends SObject___inherit;
  
+create vertex type SimpleVertex if not exists;
+alter type SimpleVertex custom javaClass='test.SimpleVertex';
+create property SimpleVertex.uuid if not exists STRING;
+create property SimpleVertex.s if not exists STRING;
+create property SimpleVertex.i if not exists INTEGER;
+create property SimpleVertex.f if not exists FLOAT;
+create property SimpleVertex.b if not exists BOOLEAN;
+create property SimpleVertex.fecha if not exists DATETIME;
+create property SimpleVertex.serial if not exists LONG;
+create property SimpleVertex.oI if not exists INTEGER;
+create property SimpleVertex.oF if not exists FLOAT;
+create property SimpleVertex.oB if not exists BOOLEAN;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'Enums';
-if ($exist.size() = 0) {
-    create class Enums extends V;
-}
-alter class Enums custom javaClass='test.Enums';
+create vertex type SimpleVertexInterfaceAttr if not exists extends SimpleVertex;
+alter type SimpleVertexInterfaceAttr custom javaClass='test.SimpleVertexInterfaceAttr';
 
+create edge type SimpleVertexInterfaceAttr_itest if not exists;
 
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'Enums') where name = 'description';
-if ($exist.size()=0) {
-    create property Enums.description STRING;
-}
+create edge type SimpleVertexInterfaceAttr_iList if not exists;
  
 
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'Enums') where name = 'theEnum';
-if ($exist.size()=0) {
-    create property Enums.theEnum string;
-}
- 
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'Enums') where name = 'enums';
-if ($exist.size()=0) {
-    create property Enums.enums embeddedlist;
-}
- 
+create vertex type SimpleVertexWithEmbedded if not exists ;
+alter type SimpleVertexWithEmbedded custom javaClass='test.SimpleVertexWithEmbedded';
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'Enums_enumToString';
-if ($exist.size()=0) {
-    create class Enums_enumToString extends E;
-}
- 
+create edge type SimpleVertexWithEmbedded_stringlist if not exists ;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'Enums_stringToEnum';
-if ($exist.size()=0) {
-    create class Enums_stringToEnum extends E;
-}
+create edge type SimpleVertexWithEmbedded_simplemap if not exists ;
  
+create vertex type SimpleVertexWithImplement if not exists extends SimpleVertex;
+alter type SimpleVertexWithImplement custom javaClass='test.SimpleVertexWithImplement';
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx';
-if ($exist.size() = 0) {
-    create class SimpleVertexEx extends SimpleVertex;
-}
-alter class SimpleVertexEx custom javaClass='test.SimpleVertexEx';
+create vertex type FooNode if not exists ;
+alter type FooNode custom javaClass='test.Foo';
 
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertexEx') where name = 'svex';
-if ($exist.size()=0) {
-    create property SimpleVertexEx.svex STRING;
-}
+create property FooNode.text if not exists STRING;
  
-alter property SimpleVertexEx.svex mandatory TRUE;
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx_looptest';
-if ($exist.size()=0) {
-    create class SimpleVertexEx_looptest extends E;
-}
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx_eagerTest';
-if ($exist.size()=0) {
-    create class SimpleVertexEx_eagerTest extends E;
-}
+create edge type FooNode_lsve if not exists ;
  
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertexEx') where name = 'enumTest';
-if ($exist.size()=0) {
-    create property SimpleVertexEx.enumTest string;
-}
+create vertex type Enums if not exists ;
+alter type Enums custom javaClass='test.Enums';
+create property Enums.description if not exists STRING;
+create property Enums.theEnum if not exists string;
+create property Enums.enums if not exists list;
  
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'SimpleVertexEx') where name = 'svuuid';
-if ($exist.size()=0) {
-    create property SimpleVertexEx.svuuid STRING;
-}
+create edge type Enums_enumToString if not exists ;
  
-
-let exist = select from(select expand(indexes) from metadata:indexmanager) where name = 'SimpleVertexEx.svuuid';
-if ($exist.size()=0) {
-    create index SimpleVertexEx.svuuid on SimpleVertexEx(svuuid) UNIQUE;
-}
+create edge type Enums_stringToEnum if not exists ;
  
+create vertex type SimpleVertexEx extends SimpleVertex;
+alter type SimpleVertexEx custom javaClass='test.SimpleVertexEx';
+create property SimpleVertexEx.svex if not exists STRING (mandatory true);
+create property SimpleVertexEx.enumTest if not exists string;
+create property SimpleVertexEx.svuuid if not exists STRING;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx_svinner';
-if ($exist.size()=0) {
-    create class SimpleVertexEx_svinner extends E;
-}
- 
+create edge type SimpleVertexEx_looptest if not exists ;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx_alString';
-if ($exist.size()=0) {
-    create class SimpleVertexEx_alString extends E;
-}
- 
+create edge type SimpleVertexEx_eagerTest if not exists ;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx_hmString';
-if ($exist.size()=0) {
-    create class SimpleVertexEx_hmString extends E;
-}
+create index on SimpleVertexEx(svuuid) UNIQUE;
  
+create edge type SimpleVertexEx_svinner if not exists ;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx_alSV';
-if ($exist.size()=0) {
-    create class SimpleVertexEx_alSV extends E;
-}
+create edge type SimpleVertexEx_alString if not exists ;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx_lSV';
-if ($exist.size()=0) {
-    create class SimpleVertexEx_lSV extends E;
-}
+create edge type SimpleVertexEx_hmString if not exists ;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx_alSVE';
-if ($exist.size()=0) {
-    create class SimpleVertexEx_alSVE extends E;
-}
+create edge type SimpleVertexEx_alSV if not exists ;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx_hmSV';
-if ($exist.size()=0) {
-    create class SimpleVertexEx_hmSV extends E;
-}
+create edge type SimpleVertexEx_lSV if not exists ;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx_hmSVE';
-if ($exist.size()=0) {
-    create class SimpleVertexEx_hmSVE extends E;
-}
+create edge type SimpleVertexEx_alSVE if not exists ;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SimpleVertexEx_ohmSVE';
-if ($exist.size()=0) {
-    create class SimpleVertexEx_ohmSVE extends EdgeAttrib;
-}
+create edge type SimpleVertexEx_hmSV if not exists ;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SVExChild';
-if ($exist.size() = 0) {
-    create class SVExChild extends SimpleVertexEx;
-}
-alter class SVExChild custom javaClass='test.SVExChild';
-
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SVExChild_looptest';
-if ($exist.size()=0) {
-    create class SVExChild_looptest extends SimpleVertexEx_looptest;
-}
+create edge type SimpleVertexEx_hmSVE if not exists ;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SVExChild_svinner';
-if ($exist.size()=0) {
-    create class SVExChild_svinner extends SimpleVertexEx_svinner;
-}
+create edge type SimpleVertexEx_ohmSVE if not exists extends EdgeAttrib;
  
+create vertex type SVExChild extends SimpleVertexEx;
+alter type SVExChild custom javaClass='test.SVExChild';
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SVExChild_alString';
-if ($exist.size()=0) {
-    create class SVExChild_alString extends SimpleVertexEx_alString;
-}
+create edge type SVExChild_looptest if not exists extends SimpleVertexEx_looptest;
  
+create edge type SVExChild_svinner if not exists extends SimpleVertexEx_svinner;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SVExChild_hmString';
-if ($exist.size()=0) {
-    create class SVExChild_hmString extends SimpleVertexEx_hmString;
-}
- 
+create edge type SVExChild_alString if not exists extends SimpleVertexEx_alString;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SVExChild_alSV';
-if ($exist.size()=0) {
-    create class SVExChild_alSV extends SimpleVertexEx_alSV;
-}
+create edge type SVExChild_hmString if not exists extends SimpleVertexEx_hmString;
  
+create edge type SVExChild_alSV extends SimpleVertexEx_alSV;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SVExChild_lSV';
-if ($exist.size()=0) {
-    create class SVExChild_lSV extends SimpleVertexEx_lSV;
-}
- 
+create edge type SVExChild_lSV extends SimpleVertexEx_lSV;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SVExChild_alSVE';
-if ($exist.size()=0) {
-    create class SVExChild_alSVE extends SimpleVertexEx_alSVE;
-}
- 
+create edge type SVExChild_alSVE if not exists extends SimpleVertexEx_alSVE;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SVExChild_hmSV';
-if ($exist.size()=0) {
-    create class SVExChild_hmSV extends SimpleVertexEx_hmSV;
-}
+create edge type SVExChild_hmSV if not exists extends SimpleVertexEx_hmSV;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SVExChild_hmSVE';
-if ($exist.size()=0) {
-    create class SVExChild_hmSVE extends SimpleVertexEx_hmSVE;
-}
+create edge type SVExChild_hmSVE if not exists extends SimpleVertexEx_hmSVE;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SVExChild_ohmSVE';
-if ($exist.size()=0) {
-    create class SVExChild_ohmSVE extends EdgeAttrib;
-}
-
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'Serial';
-if ($exist.size() = 0) {
-    create class Serial extends V;
-}
-alter class Serial custom javaClass='test.Serial';
-
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'Serial') where name = 's1';
-if ($exist.size()=0) {
-    create property Serial.s1 LONG;
-}
-
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'Serial') where name = 's2';
-if ($exist.size()=0) {
-    create property Serial.s2 LONG;
-}
+create edge type SVExChild_ohmSVE if not exists extends EdgeAttrib;
 
+create vertex type Serial if not exists ;
+alter type Serial custom javaClass='test.Serial';
+create property Serial.s1 if not exists LONG;
+create property Serial.s2 if not exists LONG;
 
-create sequence test_sequence type ordered;
 
+create vertex type Secure if not exists extends SObject;
+alter type Secure custom javaClass='test.Secure';
+create property Secure.s if not exists STRING;
 
-let exist = select from (select expand(classes) from metadata:schema) where name = 'Secure';
-if ($exist.size() = 0) {
-    create class Secure extends SObject;
-}
-alter class Secure custom javaClass='test.Secure';
+create edge type Secure___owner if not exists extends SObject___owner;
 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'Secure_subs';
-if ($exist.size()=0) {
-    create class Secure_subs extends E;
-}
- 
-
-let exist = select from (select expand(properties)  from (select expand(classes)  from metadata:schema)  where name = 'Secure') where name = 's';
-if ($exist.size()=0) {
-    create property Secure.s STRING;
-}
+create edge type Secure_subs if not exists ;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'Secure___owner';
-if ($exist.size()=0) {
-    create class Secure___owner extends SObject___owner;
-}
+create edge type Secure___inherit if not exists extends SObject___inherit;
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'Secure___inherit';
-if ($exist.size()=0) {
-    create class Secure___inherit extends SObject___inherit;
-}
  
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SubSecure';
-if ($exist.size() = 0) {
-    create class SubSecure extends V;
-}
-alter class SubSecure custom javaClass='test.SubSecure';
+create vertex type SubSecure if not exists ;
+alter type SubSecure custom javaClass='test.SubSecure';
 
-
-let exist = select from (select expand(classes) from metadata:schema) where name = 'SubSecure_aList';
-if ($exist.size()=0) {
-    create class SubSecure_aList extends E;
-}
- 
+create edge type SubSecure_aList if not exists ;
 
-end

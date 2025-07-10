@@ -7,8 +7,8 @@
 package test;
 
 import java.util.logging.Logger;
-import net.odbogm.annotations.Entity;
-import net.odbogm.annotations.Ignore;
+import net.adbogm.annotations.Entity;
+import net.adbogm.annotations.Ignore;
 
 /**
  *

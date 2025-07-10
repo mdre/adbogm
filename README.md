@@ -1,11 +1,11 @@
-# odbogm
-# OrientDB Object to Graph Mapper
+# adbogm
+# ArcadeDB Object to Graph Mapper
 
-ODBOGM is a clear Java Object to Graph Vertex and vice versa mapper for the [OrientDB](https://orientdb.org/) database. I really miss the DB4O database. I have not seen nothing similar to that, but DB4O is dead so I wanted to have the same functionality over another database. I have chosen OrientDB as a target so I wanted to make a mapper it be as noninvasive as possible to the developer.
+ADBOGM is a clear Java Object to Graph Vertex and vice versa mapper for the [ArcadeDB](https://arcadedb.com/) database. 
 
-This is my first approach and is in ***experimental version***. ***Use it as your own risk***.
+This is my first approach and is in ***beta version***. ***Use it as your own risk*** and is a migration from ODBOGM that work with OrientDB.
 
-The ODBOGM work against the Graph DB API of the OrientDB. It let you to access the underlying DB if you want but it's implement the basic function to work with the database in an absolutely clear way like DB4O.
+The ADBOGM work against the Graph DB API of the ArcadeDB. It let you to access the underlying DB if you want but it's implement the basic function to work with the database in an absolutely clear way like DB4O.
 
 To start using it you must initialize a ***SessionManager*** and set the URL to connect to the DB:
 ```Java

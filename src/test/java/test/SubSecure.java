@@ -2,8 +2,8 @@ package test;
 
 import java.util.ArrayList;
 import java.util.List;
-import net.odbogm.annotations.Entity;
-import net.odbogm.annotations.Indirect;
+import net.adbogm.annotations.Entity;
+import net.adbogm.annotations.Indirect;
 
 /**
  *

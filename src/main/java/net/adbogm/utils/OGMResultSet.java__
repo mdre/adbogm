@@ -1,0 +1,163 @@
+package net.adbogm.utils;
+
+import com.arcadedb.database.BasicDatabase;
+import com.arcadedb.database.Database;
+import com.arcadedb.database.Document;
+import com.arcadedb.graph.Edge;
+import com.arcadedb.graph.Vertex;
+import com.arcadedb.query.sql.executor.ExecutionPlan;
+import com.arcadedb.query.sql.executor.Result;
+import com.arcadedb.query.sql.executor.ResultSet;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
+
+/**
+ *
+ * @author Marcelo D. Ré {@literal <marcelo.re@gmail.com>}
+ */
+public class OGMResultSet implements ResultSet, AutoCloseable {
+    private final static Logger LOGGER = Logger.getLogger(OGMResultSet.class .getName());
+    static {
+        if (LOGGER.getLevel() == null) {
+            LOGGER.setLevel(Level.INFO);
+        }
+    }
+    
+    private final ResultSet ors;
+    private final BasicDatabase localtx;
+    
+    public OGMResultSet(BasicDatabase graph, ResultSet it) {
+        this.localtx = graph;
+        this.ors = it;
+    }
+
+    @Override
+    public void close() {
+        ors.close();
+        this.localtx.close();
+    }
+
+    public ResultSet getResultSet() {
+        return this.ors;
+    }
+
+//    private void activate() {
+//        if (!this.localtx.isActiveOnCurrentThread()) {
+//           localtx.activateOnCurrentThread();
+//        }
+//    }
+    @Override
+    public boolean hasNext() {
+//        activate();
+        return this.ors.hasNext();
+    }
+
+    @Override
+    public Result next() {
+//        activate();
+        return this.ors.next();
+    }
+
+    @Override
+    public void remove() {
+//        activate();
+        ors.remove();
+    }
+
+    @Override
+    public Optional<ExecutionPlan> getExecutionPlan() {
+//        activate();
+        return ors.getExecutionPlan();
+    }
+
+    @Override
+    public Map<String, Long> getQueryStats() {
+//        activate();
+        return ors.getQueryStats();
+    }
+
+    @Override
+    public void reset() {
+//        activate();
+        ors.reset();
+    }
+
+    @Override
+    public boolean tryAdvance(Consumer<? super Result> action) {
+//        activate();
+        return ors.tryAdvance(action);
+    }
+
+    @Override
+    public void forEachRemaining(Consumer<? super Result> action) {
+//        activate();
+        ors.forEachRemaining(action);
+    }
+
+    @Override
+    public ResultSet trySplit() {
+//        activate();
+        return ors.trySplit();
+    }
+
+    @Override
+    public long estimateSize() {
+//        activate();
+        return ors.estimateSize();
+    }
+
+    @Override
+    public int characteristics() {
+//        activate();
+        return ors.characteristics();
+    }
+
+    @Override
+    public Stream<Result> stream() {
+//        activate();
+        return ors.stream();
+    }
+
+    @Override
+    public Stream<com.arcadedb.database.Record> elementStream() {
+//        activate();
+        return ors.elementStream();
+    }
+
+    @Override
+    public Stream<Vertex> vertexStream() {
+//        activate();
+        return ors.vertexStream();
+    }
+
+    @Override
+    public Stream<Edge> edgeStream() {
+//        activate();
+        return ors.edgeStream();
+    }
+
+    @Override
+    public long getExactSizeIfKnown() {
+//        activate();
+        return ors.getExactSizeIfKnown();
+    }
+
+    @Override
+    public boolean hasCharacteristics(int characteristics) {
+//        activate();
+        return ors.hasCharacteristics(characteristics);
+    }
+
+    @Override
+    public Comparator<? super Result> getComparator() {
+//        activate();
+        return ors.getComparator();
+    }
+
+}
+

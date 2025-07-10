@@ -5,10 +5,10 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.odbogm.annotations.Entity;
-import net.odbogm.annotations.RID;
-import net.odbogm.annotations.Sequence;
-import net.odbogm.annotations.Version;
+import net.adbogm.annotations.Entity;
+import net.adbogm.annotations.RID;
+import net.adbogm.annotations.Sequence;
+import net.adbogm.annotations.Version;
 
 /**
  *

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.odbogm.annotations.Entity;
+import net.adbogm.annotations.Entity;
 
 @Entity
 public class SimpleVertexInterfaceAttr extends SimpleVertex {

@@ -5,32 +5,23 @@
  */
 package test;
 
-import net.odbogm.exceptions.IncorrectRIDField;
-import net.odbogm.SessionManager;
-import net.odbogm.proxy.IObjectProxy;
-import com.orientechnologies.orient.core.exception.OConcurrentModificationException;
-import com.tinkerpop.blueprints.impls.orient.OrientGraph;
-import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.odbogm.DbManager;
-import net.odbogm.Transaction;
-import net.odbogm.exceptions.ReferentialIntegrityViolation;
-import net.odbogm.exceptions.UnknownRID;
-import net.odbogm.security.AccessRight;
-import net.odbogm.security.GroupSID;
-import net.odbogm.security.UserSID;
-import net.odbogm.utils.DateHelper;
-import net.odbogm.utils.ReflectionUtils;
+import net.adbogm.DbManager;
+import net.adbogm.SessionManager;
+import net.adbogm.exceptions.ReferentialIntegrityViolation;
+import net.adbogm.exceptions.UnknownRID;
+import net.adbogm.proxy.IObjectProxy;
+import net.adbogm.security.AccessRight;
+import net.adbogm.security.GroupSID;
+import net.adbogm.security.UserSID;
+import net.adbogm.utils.DateHelper;
+import net.adbogm.utils.ReflectionUtils;
 
 /**
  *
@@ -54,9 +45,9 @@ public class Test {
     }
 
     public Test() {
-        initSession();
+//        initSession();
 //        testSessionManager();
-//        testDbManager();
+        testDbManager();
 //        lab();
 //        testQuery();
 //        store();
@@ -72,14 +63,13 @@ public class Test {
 //        testComplexHashMap();
 //        testSimpleQuery();
 //        testCmd();
-        sm.shutdown();
+//        sm.shutdown();
     }
 
     public void initSession() {
         System.out.println("Iniciando comunicación con la base....");
         long millis = System.currentTimeMillis();
-        sm = new SessionManager("remote:localhost/Test", "root", "toor")
-                    .setActivationStrategy(SessionManager.ActivationStrategy.CLASS_INSTRUMENTATION)
+        sm = new SessionManager("localhost",2424,"ogm-test", "root", "toortoor")
 //                    .setClassLevelLog(Transaction.class, Level.FINER)
 //                    .setClassLevelLog(SessionManager.class, Level.FINER)
                 ;
@@ -101,16 +91,16 @@ public class Test {
 //        this.testQuery();
 //        testLoop();
 //        this.lab();
-        try {
-            sm.commit();
-        } catch (OConcurrentModificationException ccme) {
-
-        } finally {
-        }
+//        try {
+//            sm.commit();
+//        } catch (OConcurrentModificationException ccme) {
+//
+//        } finally {
+//        }
     }
 
     public void testDbManager() {
-        DbManager dbm = new DbManager("remote:localhost/Test", "root", "toor");
+        DbManager dbm = new DbManager("localhost",2480,"ogm-test", "root", "toortoor");
 //        dbm.generateToConsole(new String[]{"Test"});
         dbm.generateDBSQL("/tmp/1/test.sql", new String[]{"Test"});
 
@@ -446,109 +436,109 @@ public class Test {
     }
 
     public void store() {
-        try {
-            System.out.println("*******************************");
-            System.out.println("     Test store: agrego uno    ");
-            System.out.println("*******************************");
-            
-            GroupSID gs = new GroupSID();
-            System.out.println("---------------------------------------------------------");
-            // usuado para hacer una pausa.
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            LOGGER.log(Level.FINER, "Test finer");
-            SimpleVertex svinner = new SimpleVertex();
-            SimpleVertex svinner2 = new SimpleVertex();
-            SimpleVertexEx sv;
-            SimpleVertexEx sv1;
-            SimpleVertexEx sv2;
-
-            SimpleVertexEx svex = new SimpleVertexEx();
-            svex.initInner();
-            svex.initArrayList();
-            svex.initHashMap();
-            svex.initEnum();
-
-            // Test store
-            System.out.println("iniciando STORE -------");
-            svex = sm.store(svex);
-            System.out.println("idNew: " + ((IObjectProxy) svex).___getVertex().getIdentity().isNew());
-            System.out.println("idTemporary: " + ((IObjectProxy) svex).___getVertex().getIdentity().isTemporary());
-            sm.flush();
-
-            System.out.println("----------- STORE commit -----------------");
-            sm.commit();
-
-            String testRID = sm.getRID(svex);
-            System.out.println("Test: RID:" + testRID);
-
-            System.out.println("*******************************");
-            System.out.println("         Test hydrate          ");
-            System.out.println("*******************************");
-
-            System.out.println("Test hydrate " + testRID);
-            sv = sm.get(SimpleVertexEx.class, testRID);
-
-            //---------------- pausar
-            System.out.print("1- Enter String");
-            String s = br.readLine();
-            System.out.println("continuando...");
-            //-----------------------
-
-            System.out.println("SVINNER.getS(): " + sv.getSvinner().getS());
-            System.out.println("Enum test:" + sv.getEnumTest());
-
-            System.out.println("Test - List:");
-            for (Iterator<SimpleVertex> iterator = sv.getAlSV().iterator(); iterator.hasNext();) {
-                SimpleVertex next = iterator.next();
-                System.out.println(next.i);
-
-            }
-            System.out.println("Test - Map:");
-            for (Map.Entry<String, SimpleVertex> entry : sv.getHmSV().entrySet()) {
-                String key = entry.getKey();
-                SimpleVertex value = entry.getValue();
-                System.out.println("Key: " + key + " value: " + value.i);
-            }
-
-            //---------------- pausar
-            System.out.print("2- Enter String");
-            s = br.readLine();
-            System.out.println("continuando...");
-            //-----------------------
-
-            System.out.println("*******************************");
-            System.out.println("         Test update          ");
-            System.out.println("*******************************");
-            sv.i = 25;
-            for (Iterator<SimpleVertex> iterator = sv.getAlSV().iterator(); iterator.hasNext();) {
-                SimpleVertex next = iterator.next();
-                next.i++;
-                System.out.println(next.i);
-
-            }
-            System.out.println("Update map");
-            for (Map.Entry<String, SimpleVertex> entry : sv.getHmSV().entrySet()) {
-                String key = entry.getKey();
-                SimpleVertex value = entry.getValue();
-                value.i++;
-            }
-
-            System.out.println("----------- 1 commit -----------------");
-            try {
-                sm.commit();
-            } catch (OConcurrentModificationException ccme) {
-
-            }
-//            System.out.println("----------- 2 commit -----------------");
+//        try {
+//            System.out.println("*******************************");
+//            System.out.println("     Test store: agrego uno    ");
+//            System.out.println("*******************************");
+//            
+//            GroupSID gs = new GroupSID();
+//            System.out.println("---------------------------------------------------------");
+//            // usuado para hacer una pausa.
+//            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+//            LOGGER.log(Level.FINER, "Test finer");
+//            SimpleVertex svinner = new SimpleVertex();
+//            SimpleVertex svinner2 = new SimpleVertex();
+//            SimpleVertexEx sv;
+//            SimpleVertexEx sv1;
+//            SimpleVertexEx sv2;
+//
+//            SimpleVertexEx svex = new SimpleVertexEx();
+//            svex.initInner();
+//            svex.initArrayList();
+//            svex.initHashMap();
+//            svex.initEnum();
+//
+//            // Test store
+//            System.out.println("iniciando STORE -------");
+//            svex = sm.store(svex);
+//            System.out.println("idNew: " + ((IObjectProxy) svex).___getVertex().getIdentity().isNew());
+//            System.out.println("idTemporary: " + ((IObjectProxy) svex).___getVertex().getIdentity().isTemporary());
+//            sm.flush();
+//
+//            System.out.println("----------- STORE commit -----------------");
 //            sm.commit();
-////            sv.svinner.i++;
-//            System.out.println("----------- 3 commit -----------------");
-//            sm.commit();
-        } catch (IncorrectRIDField | SecurityException | IllegalArgumentException ex) {
-            Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//
+//            String testRID = sm.getRID(svex);
+//            System.out.println("Test: RID:" + testRID);
+//
+//            System.out.println("*******************************");
+//            System.out.println("         Test hydrate          ");
+//            System.out.println("*******************************");
+//
+//            System.out.println("Test hydrate " + testRID);
+//            sv = sm.get(SimpleVertexEx.class, testRID);
+//
+//            //---------------- pausar
+//            System.out.print("1- Enter String");
+//            String s = br.readLine();
+//            System.out.println("continuando...");
+//            //-----------------------
+//
+//            System.out.println("SVINNER.getS(): " + sv.getSvinner().getS());
+//            System.out.println("Enum test:" + sv.getEnumTest());
+//
+//            System.out.println("Test - List:");
+//            for (Iterator<SimpleVertex> iterator = sv.getAlSV().iterator(); iterator.hasNext();) {
+//                SimpleVertex next = iterator.next();
+//                System.out.println(next.i);
+//
+//            }
+//            System.out.println("Test - Map:");
+//            for (Map.Entry<String, SimpleVertex> entry : sv.getHmSV().entrySet()) {
+//                String key = entry.getKey();
+//                SimpleVertex value = entry.getValue();
+//                System.out.println("Key: " + key + " value: " + value.i);
+//            }
+//
+//            //---------------- pausar
+//            System.out.print("2- Enter String");
+//            s = br.readLine();
+//            System.out.println("continuando...");
+//            //-----------------------
+//
+//            System.out.println("*******************************");
+//            System.out.println("         Test update          ");
+//            System.out.println("*******************************");
+//            sv.i = 25;
+//            for (Iterator<SimpleVertex> iterator = sv.getAlSV().iterator(); iterator.hasNext();) {
+//                SimpleVertex next = iterator.next();
+//                next.i++;
+//                System.out.println(next.i);
+//
+//            }
+//            System.out.println("Update map");
+//            for (Map.Entry<String, SimpleVertex> entry : sv.getHmSV().entrySet()) {
+//                String key = entry.getKey();
+//                SimpleVertex value = entry.getValue();
+//                value.i++;
+//            }
+//
+//            System.out.println("----------- 1 commit -----------------");
+//            try {
+//                sm.commit();
+//            } catch (OConcurrentModificationException ccme) {
+//
+//            }
+////            System.out.println("----------- 2 commit -----------------");
+////            sm.commit();
+//////            sv.svinner.i++;
+////            System.out.println("----------- 3 commit -----------------");
+////            sm.commit();
+//        } catch (IncorrectRIDField | SecurityException | IllegalArgumentException ex) {
+//            Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (IOException ex) {
+//            Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
+//        }
 
     }
 
@@ -914,21 +904,21 @@ public class Test {
     
     private void testMultiTran() {
         
-        OrientGraphFactory fact = new OrientGraphFactory("remote:localhost/Test", "root", "toor").setupPool(1, 10);
-        
-        OrientGraph t1 = fact.getTx();
-        OrientGraph t2 = fact.getTx();
-        
-        t1.addVertex("class:Test", "text","transac 1");
-        t2.addVertex("class:Test", "text","transac 2");
-        
-        t1.commit();
-        
-        t2.rollback();
-        
-        t1.shutdown();
-        t2.shutdown();
-                
+//        OrientGraphFactory fact = new OrientGraphFactory("remote:localhost/Test", "root", "toor").setupPool(1, 10);
+//        
+//        OrientGraph t1 = fact.getTx();
+//        OrientGraph t2 = fact.getTx();
+//        
+//        t1.addVertex("class:Test", "text","transac 1");
+//        t2.addVertex("class:Test", "text","transac 2");
+//        
+//        t1.commit();
+//        
+//        t2.rollback();
+//        
+//        t1.shutdown();
+//        t2.shutdown();
+//                
         
     }
     

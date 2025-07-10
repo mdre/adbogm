@@ -6,16 +6,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
-import net.odbogm.annotations.Audit;
-import net.odbogm.annotations.CascadeDelete;
-import net.odbogm.annotations.Entity;
-import net.odbogm.annotations.FieldAttributes;
-import net.odbogm.annotations.Ignore;
-import net.odbogm.annotations.Indexed;
-import net.odbogm.annotations.RemoveOrphan;
-import net.odbogm.annotations.DontLoadLinks;
-import net.odbogm.annotations.Eager;
-import net.odbogm.annotations.Indirect;
+import net.adbogm.annotations.Audit;
+import net.adbogm.annotations.CascadeDelete;
+import net.adbogm.annotations.Entity;
+import net.adbogm.annotations.FieldAttributes;
+import net.adbogm.annotations.Ignore;
+import net.adbogm.annotations.Indexed;
+import net.adbogm.annotations.RemoveOrphan;
+import net.adbogm.annotations.DontLoadLinks;
+import net.adbogm.annotations.Eager;
+import net.adbogm.annotations.Indirect;
 
 /**
  *
