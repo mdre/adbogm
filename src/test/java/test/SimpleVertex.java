@@ -151,11 +151,10 @@ public class SimpleVertex {
         this.oB = oB;
     }
 
-//    @Override
-//    public int hashCode() {
-//        int hash = 7;
-//        return hash;
-//    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.uuid);
+    }
 
     @Override
     public boolean equals(Object obj) {

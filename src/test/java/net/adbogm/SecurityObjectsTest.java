@@ -55,13 +55,13 @@ public class SecurityObjectsTest {
         // elminar los grupos
         RemoteDatabase db = sm.getDBTx();
         
-        db.command("SQL","delete vertex GroupSID");
+        db.command("SQL","delete from GroupSID");
 
         // eliminar los usuarios
-        db.command("SQL", "delete vertex UserSID");
+        db.command("SQL", "delete from UserSID");
 
         // eliminar los SSVertex
-        db.command("SQL", "delete vertex SSimpleVertex");
+        db.command("SQL", "delete from SSimpleVertex");
         
         db.close();
 

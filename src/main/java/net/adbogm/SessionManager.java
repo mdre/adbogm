@@ -146,6 +146,7 @@ public class SessionManager implements IActions.IStore, IActions.IGet {
     public RemoteDatabase getDBTx() {
         RemoteDatabase dbTx = new RemoteDatabase(serverName, port, database, user, passwd);
         dbTx.setTransactionIsolationLevel(Database.TRANSACTION_ISOLATION_LEVEL.REPEATABLE_READ);
+        
         return dbTx;
     }
     
@@ -514,11 +515,10 @@ public class SessionManager implements IActions.IStore, IActions.IGet {
     }
     
     
-//    public SessionManager setClassLevelLog(Class<?> clazz, Level level) {
-//        Logger L = Logger.getLogger(clazz.getName());
-//        L.setLevel(level);
-//        return this;
-//    }
+    public SessionManager setClassLevelLog(Class<?> clazz, Level level) {
+        Configurator.setLevel(clazz, level);
+        return this;
+    }
     
     
     public int openTransactionsCount() {

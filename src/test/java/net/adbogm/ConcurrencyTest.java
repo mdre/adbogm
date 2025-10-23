@@ -119,7 +119,7 @@ public class ConcurrencyTest {
         //clean ogm transaction cache, not Orient's
         t1.clearCache();
         t2.clearCache();
-
+        
         //retrieve again, it must be correctly saved for both transactions
         SimpleVertexEx t1s2 = t1.get(SimpleVertexEx.class, rid);
         assertEquals("modified", t1s2.getSvex());

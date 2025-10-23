@@ -17,10 +17,10 @@ public class LogginProperties {
     public static Level ClassDef                    = Level.INFO;
     public static Level DbManager                   = Level.INFO;
     public static Level HashMapEmbeddedProxy        = Level.INFO;
-    public static Level HashMapLazyProxy            = Level.INFO;
+    public static Level HashMapLazyProxy            = Level.TRACE;
     public static Level LinkedListLazyProxy         = Level.INFO;
     public static Level ObjectMapper                = Level.INFO;
-    public static Level ObjectProxy                 = Level.INFO;
+    public static Level ObjectProxy                 = Level.TRACE;
     public static Level ObjectProxyFactory          = Level.INFO;
     public static Level ObjectStruct                = Level.INFO;
     public static Level ReflectionUtils             = Level.INFO;

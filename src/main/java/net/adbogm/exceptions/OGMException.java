@@ -20,6 +20,7 @@ public class OGMException extends RuntimeException {
 
     public OGMException(Throwable cause, Transaction transaction) {
         super(cause.getMessage(), cause);
+        cause.printStackTrace();
         canRetry = cause instanceof NeedRetryException;
     }
         

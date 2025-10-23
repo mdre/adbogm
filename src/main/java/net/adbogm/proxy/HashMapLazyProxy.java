@@ -4,7 +4,6 @@ import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
@@ -84,8 +83,8 @@ public class HashMapLazyProxy extends HashMap<Object, Object> implements ILazyMa
         // recuperar todos los elementos desde el vértice y agregarlos a la colección
         boolean indirect = this.direction == DIRECTION.IN;
         for (Edge edge : relatedTo.getEdges(this.direction, field)) {
-            Vertex next = indirect ? edge.getInVertex() : edge.getOutVertex();
-            LOGGER.log(Level.DEBUG, "loading edge: {} to: {}", new Object[]{edge.getIdentity().toString(),next.getIdentity()});
+            Vertex next = indirect ? edge.getOutVertex() : edge.getInVertex();
+            LOGGER.log(Level.DEBUG, "loading edge: {} to: {}", edge.getIdentity().toString(),next.getIdentity());
             // el Lazy simpre se hace recuperado los datos desde la base de datos.
             Object o = null;
             o = transaction.get(valueClass, next.getIdentity().toString());
@@ -451,8 +450,10 @@ public class HashMapLazyProxy extends HashMap<Object, Object> implements ILazyMa
         }
         this.setDirty();
         Object previous = super.put(key, value);
+        LOGGER.log(Level.TRACE, "hm previous: {} - value: {} - equals(value): {}",previous,value, value.equals(previous));
         if (previous != null) {
-            if (!Objects.equals(value, previous)) {
+            //!Objects.equals(value, previous)
+            if (!value.equals(previous)) {
                 //there a was a change, we remove the key state to consider it added
                 this.keyState.remove(key);
                 //we consider the value as removed to remove the old edge
@@ -538,8 +539,7 @@ public class HashMapLazyProxy extends HashMap<Object, Object> implements ILazyMa
 
     private Object edgeToObject(Edge edge) {
         Object k;
-        LOGGER.log(Level.DEBUG, "edge keyclass: {}  OE RID:{}",
-                new Object[]{this.keyClass, edge.getIdentity().toString()});
+        LOGGER.log(Level.DEBUG, "edge keyclass: {}  OE RID:{}",this.keyClass, edge.getIdentity().toString());
         if (Primitives.PRIMITIVE_MAP.containsKey(this.keyClass)) {
             k = edge.get("key");
             LOGGER.log(Level.INFO, "primitive edge key: {}",k);

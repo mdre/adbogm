@@ -4,6 +4,7 @@ import com.arcadedb.database.Database;
 import com.arcadedb.database.RID;
 import com.arcadedb.exception.ArcadeDBException;
 import com.arcadedb.exception.ConcurrentModificationException;
+import com.arcadedb.exception.RecordNotFoundException;
 import com.arcadedb.graph.Edge;
 import com.arcadedb.graph.MutableEdge;
 import com.arcadedb.graph.MutableVertex;
@@ -1474,19 +1475,14 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
             if (o == null) {
                 this.begin();
                 // recuperar el vértice solicitado
-                Vertex v = this.arcadedbTransact.lookupByRID(new RID(arcadedbTransact, rid)).asVertex();
-                if (v == null) {
-                    //closeInternalTx();
-                    throw new UnknownRID(rid, this);
-                }
-                
-                // hidratar un objeto
                 try {
+                    Vertex v = this.arcadedbTransact.lookupByRID(new RID(arcadedbTransact, rid)).asVertex();
+                    // hidratar un objeto
                     o = objectMapper.hydrate(type, v, this);
-                    
-                    //@TODO: if can't create proxy throw exception and stop
-
+                } catch (RecordNotFoundException ex) {
+                    throw new UnknownRID(rid, this);
                 } catch (InstantiationException | IllegalAccessException | NoSuchFieldException ex) {
+                    //@TODO: if can't create proxy throw exception and stop
                     LOGGER.log(Level.ERROR, "ERROR",ex);
                 }
             } else {
@@ -1745,7 +1741,6 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
         
         DocumentType ret = arcadedbTransact.getSchema().getType(clase);
         
-        LOGGER.log(Level.TRACE, "^^^^^^^ end.");
         return ret;
     }
 

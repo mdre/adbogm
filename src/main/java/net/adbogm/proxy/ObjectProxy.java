@@ -631,8 +631,9 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                         Object innerO = fc.isInterface() ? this.___transaction.get(vertice.getIdentity().toString()) :
                                 this.___transaction.get(fc, vertice.getIdentity().toString());
                         
-                        LOGGER.log(Level.DEBUG, "Inner object {}: {}  FC: {}   innerO.class: {} hashCode: {}", new Object[]{
-                            field, vertice, fc.getSimpleName(), innerO.getClass().getSimpleName(), System.identityHashCode(innerO)});
+                        // OJO que falla el logger si innerO es null.
+//                        LOGGER.log(Level.DEBUG, "Inner object {}: {}  FC: {}   innerO.class: {} hashCode: {}", new Object[]{
+//                            field, vertice, fc.getSimpleName(), innerO.getClass().getSimpleName(), System.identityHashCode(innerO)});
                         fLink.set(this.___proxiedObject, fc.cast(innerO));
                         duplicatedLinkGuard = true;
 
@@ -798,7 +799,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
             LOGGER.log(Level.DEBUG, "Dirty: " + this.___proxiedObject);
             this.___transaction.setAsDirty(this.___proxiedObject);
             LOGGER.log(Level.DEBUG, "Objeto marcado como dirty! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-            LOGGER.log(Level.TRACE, ThreadHelper.getCurrentStackTrace());
+//            LOGGER.log(Level.TRACE, ThreadHelper.getCurrentStackTrace());
         }
     }
 
@@ -979,12 +980,13 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                 && ((ILazyCalls.class.isAssignableFrom(collectionFieldValue.getClass()) && ((ILazyCalls) collectionFieldValue).isDirty())
                                 || (!ILazyCalls.class.isAssignableFrom(collectionFieldValue.getClass())))) {
                             LOGGER.log(Level.DEBUG, (!ILazyCalls.class.isAssignableFrom(collectionFieldValue.getClass()))
-                                    ? "No es instancia de ILazyCalls"
-                                    : "Es instancia de Lazy y está marcado como DIRTY");
+                                    ? "{} no es instancia de ILazyCalls"
+                                    : "{} es instancia de Lazy y está marcado como DIRTY", field);
 
                             if (collectionFieldValue instanceof List) {
                                 ILazyCollectionCalls lazyCollectionCalls;
                                 // procesar la colección
+                                LOGGER.log(Level.DEBUG, "{} es una lista. ",field);
                                 
                                 if (ILazyCollectionCalls.class.isAssignableFrom(collectionFieldValue.getClass())) {
                                     LOGGER.log(Level.DEBUG, "ya implementa ILazyCollectionCalls");
@@ -1084,7 +1086,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                 }
 
                             } else if (collectionFieldValue instanceof Map) {
-
+                                LOGGER.log(Level.DEBUG, "{} es un MAP. ",field);
                                 Map mapFieldValue;
                                 // procesar la colección
 
@@ -1092,6 +1094,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                     mapFieldValue = (Map) collectionFieldValue;
                                 } else {
                                     // se ha asignado una colección original y se debe exportar todo
+                                    LOGGER.log(Level.DEBUG, "Map primitivo detectado. Se debe convertir y exportar todo lo que contenga.");
                                     this.___transaction.getObjectMapper().collectionToLazy(this.___proxiedObject, 
                                                                                            field, 
                                                                                            this.___baseElement.asVertex(), 
@@ -1104,13 +1107,18 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                     //preparar la interface para que se continúe con el acceso.
                                     mapFieldValue = (Map) inter;
                                 }
-
+                                
                                 // refrescar los estados
                                 ILazyMapCalls lazyMap = (ILazyMapCalls) mapFieldValue;
                                 final Map<Object, ObjectCollectionState> keysState = lazyMap.getKeyState();
                                 final Map<Object, Edge> keysToEdges = lazyMap.getKeyToEdge();
                                 final Map<Object, ObjectCollectionState> entitiesState = lazyMap.getEntitiesState();
-
+                                
+                                LOGGER.log(Level.DEBUG, "current Values: {}", lazyMap);
+                                LOGGER.log(Level.DEBUG, "map keyState: {}", keysState);
+                                LOGGER.log(Level.DEBUG, "map keyToEdges: {}", keysToEdges);
+                                LOGGER.log(Level.DEBUG, "map entityState: {}", entitiesState);
+                                
                                 // recorrer todas las claves del mapa
                                 for (Map.Entry<Object, ObjectCollectionState> entry1 : keysState.entrySet()) {
                                     Object key = entry1.getKey();
@@ -1139,12 +1147,12 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                             boolean newEdge = true;
                                             
                                             // if key already a IObjectProxy, check the status of the edge to recreate it if invalid (previous failed commit)
-//                                            if (key instanceof IObjectProxy) {
-//                                                edge = ((IObjectProxy)key).___getEdge();
-//                                                if (edge.getInternalStatus() == ORecordElement.STATUS.LOADED && Objects.equals(to, edge.getTo())) {
-//                                                    newEdge = false; // valid edge
-//                                                }
-//                                            }
+                                            if (key instanceof IObjectProxy) {
+                                                edge = ((IObjectProxy)key).___getEdge().modify();
+                                                if (Objects.equals(to, edge.getInVertex())) {
+                                                    newEdge = false; // valid edge
+                                                }
+                                            }
                                             
                                             if (newEdge) {
                                                 // crear un link entre los dos objetos.
@@ -1154,6 +1162,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                                 //this.___transaction.getObjectMapper().fillSequenceFields(key, this.___transaction, null);
                                                 VertexUtils.fillElement(edge, this.___transaction.getObjectMapper().simpleMap(key));
                                                 edge.save();
+                                                LOGGER.log(Level.TRACE, "edge: {}   from(out): {} ---> to(in): {}",edge.getIdentity(),edge.getOut(), edge.getIn());
                                             }
 
                                             if (this.___transaction.isAuditing()) {
@@ -1189,16 +1198,26 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                     }
                                 }
                                 
+                                LOGGER.log(Level.TRACE, "remove entities marked as removed");
+                                LOGGER.log(Level.TRACE, "entityStates: {}",entitiesState);
                                 for (Map.Entry<Object, ObjectCollectionState> e : entitiesState.entrySet()) {
                                     Object value = e.getKey();
                                     ObjectCollectionState valueState = e.getValue();
+                                    LOGGER.log(Level.TRACE, "entity: {} - state: {} - IObjectProxy: {}",value, valueState, (value instanceof IObjectProxy));
                                     if (value instanceof IObjectProxy && valueState == ObjectCollectionState.REMOVED) {
                                         //we must remove the old edge
                                         IObjectProxy valueop = (IObjectProxy)value;
                                         boolean removeOrphan = f.isAnnotationPresent(RemoveOrphan.class);
-                                        
+                                        LOGGER.log(Level.TRACE, "v: {} - edges: {} - from (out): {} - to(in): {}",
+                                                valueop.___getRid(),
+                                                valueop.___getVertex().getEdges().size(),
+                                                valueop.___getVertex().getEdges(DIRECTION.OUT, graphRelationName).size(),
+                                                valueop.___getVertex().getEdges(DIRECTION.IN, graphRelationName).size()
+                                                );
                                         valueop.___getVertex().getEdges(DIRECTION.IN, graphRelationName).forEach(edge -> {
-                                            if (Objects.equals(this.___baseElement, edge.asEdge().getInVertex())) {
+                                            LOGGER.log(Level.TRACE, "edge: {} - edge.getInVertex: {}", edge.asEdge(), edge.asEdge().getInVertex());
+                                            if (Objects.equals(this.___baseElement, edge.asEdge().getOutVertex())) {
+                                                LOGGER.log(Level.TRACE, "call to remove!! <<<<<<");
                                                 removeEdge(graphRelationName, edge.modify(), removeOrphan ? valueop : null);
                                             }
                                         });
