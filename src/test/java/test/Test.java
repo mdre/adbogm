@@ -69,7 +69,7 @@ public class Test {
     public void initSession() {
         System.out.println("Iniciando comunicación con la base....");
         long millis = System.currentTimeMillis();
-        sm = new SessionManager("localhost",2424,"ogm-test", "root", "toortoor")
+        sm = new SessionManager("localhost", 50051, 2424,"ogm-test", "root", "toortoor")
 //                    .setClassLevelLog(Transaction.class, Level.FINER)
 //                    .setClassLevelLog(SessionManager.class, Level.FINER)
                 ;

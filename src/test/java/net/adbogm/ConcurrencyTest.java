@@ -28,7 +28,8 @@ public class ConcurrencyTest {
     @Before
     public void setUp() {
         System.out.println("Initializing session manager...");
-        sm = new SessionManager("localhost", TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS, true)
+        sm = new SessionManager(TestConfig.TESTSERVER, TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS)
+//        sm = new SessionManager(TestConfig.TESTSERVER, TestConfig.TESTGRPCDBPORT, TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS, true)
 //                    .setClassLevelLog(Transaction.class, Level.INFO)
                 ;
         sm.begin();
@@ -66,7 +67,7 @@ public class ConcurrencyTest {
                 @Override
                 public String call() throws Exception {
                     System.out.println("running!!!!!!");
-                    Transaction t = sm.getTransaction();
+                    Transaction t = sm.getCurrentTransaction();
                     SimpleVertexEx vert = t.get(SimpleVertexEx.class, rid);
                     String s = vert.getSvex();
                     System.out.println(s);
@@ -92,7 +93,8 @@ public class ConcurrencyTest {
     }
 
 
-    @Test
+//    @Test
+    // Arcade no tiene un canal único. Cada Remote es independiente así que no hay un caché a nivel del OGM de Arcade.
     public void testCacheOrient() throws Exception {
         SimpleVertexEx s1 = new SimpleVertexEx();
         s1 = sm.store(s1);
@@ -101,8 +103,8 @@ public class ConcurrencyTest {
         assertNotNull(rid);
         System.out.println("RID: " + rid);
 
-        Transaction t1 = sm.getTransaction();
-        Transaction t2 = sm.getTransaction();
+        Transaction t1 = sm.getNewTransaction();
+        Transaction t2 = sm.getNewTransaction();
 
         //retrieve with t1
         SimpleVertexEx t1s1 = t1.get(SimpleVertexEx.class, rid);

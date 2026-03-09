@@ -20,6 +20,7 @@ import asm.proxy.IEasyProxyInterceptor;
 import com.arcadedb.database.Document;
 import com.arcadedb.graph.Edge;
 import com.arcadedb.graph.Vertex;
+import java.util.Set;
 import net.adbogm.LogginProperties;
 import net.adbogm.ObjectMapper;
 import net.adbogm.ObjectStruct;
@@ -48,7 +49,7 @@ import org.apache.logging.log4j.core.config.Configurator;
  *
  * @author Marcelo D. Ré {@literal <marcelo.re@gmail.com>}
  */
-public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
+public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
 
     private final static Logger LOGGER = LogManager.getLogger(ObjectProxy.class.getName());
 
@@ -63,12 +64,12 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
     // Vértice desde el que se obtiene el objeto.
     // private MutableVertex baseVertex;
     private Document ___baseElement;
-    
+
     // dado que Arcade no tiene isNew como Orient, agrego esta propiedad que 
     // debería actulizarse después del primer commit. El único método que la establecería
     // en true sería store()
     private boolean ___isNew = false;
-    
+
     // permite marcar el objeto como inválida en caso que se haga un rollback 
     // sobre un objeto que nunca se persistió.
     private boolean ___isValidObject = true;
@@ -96,32 +97,31 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
         this.___baseElement = e;
         this.___transaction = t;
     }
-    
-    
+
     // EasyProxy interceptor 
     @Override
     public Object intercept(Object target, Method method, Method superMethod, Object... args
-                    ) throws Throwable {   
-        
+    ) throws Throwable {
+
         // response object
         Object res = null;
         //this.___proxiedObject = self;
         // el estado del objeto se debe poder consultar siempre
         //=====================================================
         LOGGER.log(Level.TRACE, ">=====================================================");
-        LOGGER.log(Level.TRACE, target.getClass().getName() + " : "+ this.___baseElement.getRecord().getIdentity()+ " > method: "+method.getName()+"  superMethod: "+(superMethod!=null?superMethod.getName():"NULL"));
-        LOGGER.log(Level.TRACE, "--->"+args.length);
-        LOGGER.log(Level.TRACE, "param: " + (args==null?"NULL":Arrays.toString(args)));
+        LOGGER.log(Level.TRACE, target.getClass().getName() + " : " + this.___baseElement.getRecord().getIdentity() + " > method: " + method.getName() + "  superMethod: " + (superMethod != null ? superMethod.getName() : "NULL"));
+        LOGGER.log(Level.TRACE, "--->" + args.length);
+        LOGGER.log(Level.TRACE, "param: " + (args == null ? "NULL" : Arrays.toString(args)));
         LOGGER.log(Level.TRACE, "<<<<<param");
-        
+
         LOGGER.log(Level.TRACE, "=====================================================");
-        
-        String debugLabel = this.___baseElement.getRecord().getIdentity()+ " > method: "+method.getName();
-        
+
+        String debugLabel = this.___baseElement.getRecord().getIdentity() + " > method: " + method.getName();
+
         if (method.getName().equals("___isValid")) {
             return this.___isValid();
         }
-        
+
         if (method.getName().equals("___isDeleted")) {
             return this.___isDeleted();
         }
@@ -139,7 +139,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
         if (method.getName().equals("___getRid")) {
             return this.___getRid();
         }
-        
+
         if (method.getName().equals("___getBaseClass")) {
             return this.___getBaseClass();
         }
@@ -161,7 +161,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
             LOGGER.log(Level.DEBUG, "RID nuevo. No procesar porque el store preparó todo y no hay nada que recuperar de la base.");
             this.___loadLazyLinks = false;
         }
-        
+
         //if object was deleted:
         if (this.___deletedMark) {
             switch (method.getName()) {
@@ -173,11 +173,11 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                         return superMethod.invoke(target, args);
                     }
                 default:
-                    throw new ObjectMarkedAsDeleted("The object " + this.___baseElement.getIdentity().toString() + 
-                            " was deleted from the database. Trying to call to " + method.getName());
+                    throw new ObjectMarkedAsDeleted("The object " + this.___baseElement.getIdentity().toString()
+                            + " was deleted from the database. Trying to call to " + method.getName());
             }
         }
-        
+
         // modificar el llamado
         switch (method.getName()) {
 //            case "___uptadeVersion":
@@ -186,7 +186,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
 //                }
 //                break;
             case "___setAsNew":
-                this.___setAsNew((boolean)args[0]);
+                this.___setAsNew((boolean) args[0]);
                 break;
             case "___isNew":
                 if (this.___objectReady) {
@@ -235,9 +235,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                 break;
             case "___commit":
                 /**
-                 * FIXME: se podría evitar si se controlara si los links se
-                 * han cargado o no al momento de hacer el commit para
-                 * evitar realizar el load sin necesidad.
+                 * FIXME: se podría evitar si se controlara si los links se han cargado o no al momento de hacer el commit para evitar realizar el load sin necesidad.
                  */
                 if (this.___objectReady) {
                     if (this.___loadLazyLinks) {
@@ -262,22 +260,21 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
 //            case "___updateElement":
 //                this.___updateElement();
 //                break;
-            
+
             case "___setEdge":
-                this.___setEdge((MutableEdge)args[0]);
+                this.___setEdge((MutableEdge) args[0]);
                 break;
             case "___setVertex":
-                this.___setVertex((MutableVertex)args[0]);
+                this.___setVertex((MutableVertex) args[0]);
                 break;
 
             case "___setAuditLogLabel":
-                this.___setAuditLogLabel((String)args[0]);
+                this.___setAuditLogLabel((String) args[0]);
                 break;
             case "___getAuditLogLabel":
                 res = this.___getAuditLogLabel();
                 break;
-                
-            
+
             case "___tdd___setDirty":
                 res = superMethod.invoke(target, args);
                 break;
@@ -312,26 +309,26 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                         this.___loadLazyLinks();
                     }
                 }
-                
+
                 try {
                     if (superMethod == null) {
-                        String bbMName = Arrays.asList(target.getClass().getDeclaredMethods()).stream().filter(m->m.getName().startsWith(method.getName()+"$ac")).findFirst().get().getName();
-                        LOGGER.log(Level.TRACE, "SuperMethod NULL!!! ---> redefine superMethod> "+bbMName);
-                        
+                        String bbMName = Arrays.asList(target.getClass().getDeclaredMethods()).stream().filter(m -> m.getName().startsWith(method.getName() + "$ac")).findFirst().get().getName();
+                        LOGGER.log(Level.TRACE, "SuperMethod NULL!!! ---> redefine superMethod> " + bbMName);
+
                         Class[] p = new Class[args.length];
                         for (int i = 0; i < args.length; i++) {
-                            p[i] = args[i].getClass().getName().contains("EasyProxy")?args[i].getClass().getSuperclass():args[i].getClass();
+                            p[i] = args[i].getClass().getName().contains("EasyProxy") ? args[i].getClass().getSuperclass() : args[i].getClass();
                         }
-                        
+
                         LOGGER.log(Level.TRACE, "Method parameterTypes: " + Arrays.asList(method.getParameterTypes()));
                         LOGGER.log(Level.TRACE, "Args parameterTypes: " + Arrays.asList(p));
                         Method m = target.getClass().getMethod(bbMName, p);
                         res = m.invoke(target, args);
                     } else {
-                            res = superMethod.invoke(target, args);
+                        res = superMethod.invoke(target, args);
                     }
                 } catch (InvocationTargetException ex) {
-                        throw ex.getCause();
+                    throw ex.getCause();
                 }
                 // verificar si hay diferencias entre los objetos dependiendo de la estrategia seleccionada.
                 if (this.___objectReady) {
@@ -349,7 +346,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                 break;
         }
         // return the result
-        LOGGER.log(Level.TRACE, "<<<<<<<<<<<<<<<<<<<<< INTERCEPT END: "+debugLabel);
+        LOGGER.log(Level.TRACE, "<<<<<<<<<<<<<<<<<<<<< INTERCEPT END: " + debugLabel);
         return res;
     }
 
@@ -357,56 +354,49 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
      * Establece el objecto como nuevo. Solo Store debería llamar a este método
      */
     @Override
-    public void ___setAsNew(boolean b){
+    public void ___setAsNew(boolean b) {
         this.___isNew = b;
     }
-    
+
     @Override
     public boolean ___isNew() {
         return this.___isNew;
     }
-    
+
     /**
-     * Si se establece el AuditLogLabel todos los objetos que sean cargados a partir 
-     * de el objeto actual llevaran por defecto el mismo label.
-     * 
-     * @param label  a utilizar en los logs por el Auditor
+     * Si se establece el AuditLogLabel todos los objetos que sean cargados a partir de el objeto actual llevaran por defecto el mismo label.
+     *
+     * @param label a utilizar en los logs por el Auditor
      */
-    
     public void ___setAuditLogLabel(String label) {
         this.___auditLogLabel = label;
     }
-    
-    
+
     public String ___getAuditLogLabel() {
         return this.___auditLogLabel;
     }
-    
-    
+
     /**
      * Establece el objeto base sobre el que trabaja el proxy.
      *
      * @param po objeto de referencia
      */
-    
     public void ___setProxiedObject(Object po) {
         this.___proxiedObject = po;
         this.___injectRid();
         this.___objectReady = true;
     }
-    
-    
+
     @Override
     public void ___injectRid() {
         //inject RID if the field is defined
         ClassDef classdef = getClassDef();
         if (classdef.ridField != null) {
-            LOGGER.log(Level.TRACE, classdef.ridField+" = "+___baseElement.getIdentity().toString());
+            LOGGER.log(Level.TRACE, classdef.ridField + " = " + ___baseElement.getIdentity().toString());
             objectMapper().setFieldValue(___proxiedObject, classdef.ridField, ___baseElement.getIdentity().toString());
         }
     }
-    
-    
+
 //    @Override
 //    public void ___uptadeVersion() {
 //        ClassDef classdef = getClassDef();
@@ -414,22 +404,18 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
 //            objectMapper().setFieldValue(___proxiedObject, classdef.versionField, ___baseElement.get("@version"));
 //        }
 //    }
-
-
     /**
      * retorna el MutableDocument asociado a este proxi.
      *
      * @return referencia al Document
      */
-    
     @Override
     public Document ___getElement() {
         return this.___baseElement;
     }
 
     /**
-     * retorna el vértice asociado a este proxi o null en caso que no exista
-     * uno.
+     * retorna el vértice asociado a este proxi o null en caso que no exista uno.
      *
      * @return referencia al MutableVertex
      */
@@ -441,7 +427,6 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
             return null;
         }
     }
-
 
     /**
      * Returns the Record ID of the associated element.
@@ -457,7 +442,6 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
         }
     }
 
-
     /**
      *
      * establece el elemento base como un vértice.
@@ -469,14 +453,11 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
         this.___baseElement = v;
     }
 
-
     /**
-     * retorna el vértice asociado a este proxi o null en caso que no exista
-     * uno.
+     * retorna el vértice asociado a este proxi o null en caso que no exista uno.
      *
      * @return la referencia al Edge
      */
-    
     @Override
     public Edge ___getEdge() {
         if (this.___baseElement instanceof Edge) {
@@ -486,44 +467,36 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
         }
     }
 
-
     /**
      *
      * establece el elemento base como un vértice.
      *
      * @param e Edge de referencia
      */
-    
     @Override
     public void ___setEdge(Edge e) {
         this.___baseElement = e;
     }
 
-    
     @Override
     public Object ___getProxiedObject() {
         return this.___proxiedObject;
     }
 
-    
     @Override
     public Class<?> ___getBaseClass() {
         return this.___baseClass;
     }
 
-    
     @Override
     public void ___setDeletedMark() {
         this.___deletedMark = true;
     }
 
-    
     @Override
     public boolean ___isDeleted() {
         return this.___deletedMark;
     }
-
-    
 
     /**
      * Creates a new temporary valid vertex and associates it with the proxy.
@@ -536,17 +509,14 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
 //                    getClassDef().entityName);
 //        }
 //    }
-    
-    
     /**
      * Load all links of object.
      */
-    
     @Override
     public synchronized void ___loadLazyLinks() {
         if (this.___loadLazyLinks) {
 //            this.___transaction.initInternalTx();
-            
+
             LOGGER.log(Level.DEBUG, "Base class: {}", this.___baseClass.getSimpleName());
             LOGGER.log(Level.DEBUG, "iniciando loadLazyLinks...");
             boolean currentDirtyState = this.___isDirty();
@@ -564,39 +534,36 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
 //            this.___transaction.closeInternalTx();
         }
     }
-    
-    
+
     private void updateLinks() {
         ClassDef classdef = getClassDef();
         Vertex ov = this.___baseElement.asVertex();
         LOGGER.log(Level.DEBUG, "Processing {} links ", classdef.links.size());
         this.loadLinks(ov, classdef, classdef.links, false, false);
     }
-    
-    
+
     /**
      * Load the links of the given vertex.
-     * 
+     *
      * @param ov The vertex.
      * @param linksFields Fields to hydrate.
      * @param onlyEager If true, only fields marked as Eager, else all fields.
      * @param indirect If must load indirect links instead of direct.
      */
-    
     private void loadLinks(Vertex ov, ClassDef classdef, HashMap<String, Class<?>> linksFields, boolean onlyEager, boolean indirect) {
         for (Map.Entry<String, Class<?>> entry : linksFields.entrySet()) {
             try {
                 String field = entry.getKey();
                 Class<?> fc = entry.getValue();
                 Field fLink = classdef.fieldsObject.get(field);
-                
+
                 if (onlyEager && !fLink.isAnnotationPresent(Eager.class)) {
                     continue; //only eager, discard field. Go to next
                 }
-                
+
                 String graphRelationName;
                 DIRECTION direction;
-                
+
                 if (indirect) {
                     //the name configured in annotation must be used
                     Indirect in = fLink.getAnnotation(Indirect.class);
@@ -609,14 +576,14 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                 }
                 LOGGER.log(Level.DEBUG, "Field: {}.{}   Class: {}  RelationName: {}",
                         this.___baseClass.getSimpleName(), field,
-                            fc.getSimpleName(), graphRelationName);
-                
+                        fc.getSimpleName(), graphRelationName);
+
                 boolean duplicatedLinkGuard = false;
-                
+
                 // retrieve vertex from database 
                 for (Vertex vertice : ov.getVertices(direction, graphRelationName)) {
                     LOGGER.log(Level.DEBUG, "hydrate innerO: {}", vertice.getIdentity());
-                    
+
                     if (!duplicatedLinkGuard) {
                         /*
                          * FIXME: esto genera una dependencia cruzada.
@@ -628,9 +595,9 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                         this.___transaction.addToTransactionCache(this.___getRid(), ___proxiedObject);
 
                         // si es una interface llamar a get solo con el RID.
-                        Object innerO = fc.isInterface() ? this.___transaction.get(vertice.getIdentity().toString()) :
-                                this.___transaction.get(fc, vertice.getIdentity().toString());
-                        
+                        Object innerO = fc.isInterface() ? this.___transaction.get(vertice.getIdentity().toString())
+                                : this.___transaction.get(fc, vertice.getIdentity().toString());
+
                         // OJO que falla el logger si innerO es null.
 //                        LOGGER.log(Level.DEBUG, "Inner object {}: {}  FC: {}   innerO.class: {} hashCode: {}", new Object[]{
 //                            field, vertice, fc.getSimpleName(), innerO.getClass().getSimpleName(), System.identityHashCode(innerO)});
@@ -639,9 +606,9 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
 
                         // replicate the AuditLogLabel to inner objects
                         if (this.___auditLogLabel != null && innerO instanceof IObjectProxy) {
-                            ((IObjectProxy)innerO).___setAuditLogLabel(this.___auditLogLabel);
+                            ((IObjectProxy) innerO).___setAuditLogLabel(this.___auditLogLabel);
                         }
-                        
+
                         ___transaction.decreseTransactionCache();
                     } else if (false) {
                         throw new DuplicateLink();
@@ -649,56 +616,53 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                     LOGGER.log(Level.DEBUG, "FIN hydrate innerO: {}^^^^^^^^^^^^^^^^^^^^^^^^^^^^^", vertice.getIdentity());
                 }
             } catch (SecurityException | IllegalArgumentException | IllegalAccessException ex) {
-                LOGGER.log(Level.ERROR, "ERROR",ex);
+                LOGGER.log(Level.ERROR, "ERROR", ex);
             }
         }
     }
 
-    
     private void updateIndirectLinks() {
         boolean preservDirtyState = this.___dirty;
 
-        MutableVertex ov = (MutableVertex) this.___baseElement;
-        ClassDef classdef = getClassDef();
+        if (this.___baseElement instanceof Vertex) {
+            Vertex ov = this.___baseElement.asVertex();
+            ClassDef classdef = getClassDef();
 
-        LOGGER.log(Level.DEBUG, "procesando {} indirected links", new Object[]{classdef.indirectLinks.size()});
-        this.loadLinks(ov, classdef, classdef.indirectLinks, false, true);
+            LOGGER.log(Level.DEBUG, "procesando {} indirected links", new Object[]{classdef.indirectLinks.size()});
+            this.loadLinks(ov, classdef, classdef.indirectLinks, false, true);
 
-        
-        //ANALYZE WELL IF THIS CODE IS VALID OR UNNECESSARY AND REMOVE IT
-        
-//        // forzar la recarga de las colecciones.
-//        LOGGER.log(Level.DEBUG, "Refrescando las colecciones indirectas...");
-        // ********************************************************************************************
-        // hidratar las colecciones indirectas
-        // procesar todos los indirectLinkslist
-        // ********************************************************************************************
-//            for (Map.Entry<String, Class<?>> entry : classdef.indirectLinkLists.entrySet()) {
-//                try {
-//                    // FIXME: se debería considerar agregar una annotation EAGER!
-//                    String field = entry.getKey();
-//                    Class<?> fc = entry.getValue();
-//                    LOGGER.log(Level.DEBUG, "Field: {}   Class: {}", new String[]{field, fc.getName()});
-//
-//                    Field fLink = classdef.fieldsObject.get(field);
-//                    Direction relationDirection = Direction.IN;
-//
-//                    Indirect in = fLink.getAnnotation(Indirect.class);
-//                    String graphRelationName = in.linkName();
-//
-//                    // si hay Vértices conectados o si el constructor del objeto ha inicializado los vectores, convertirlos
-//                    if ((ov.countEdges(relationDirection, graphRelationName) > 0) || (fLink.get(___proxiedObject) != null)) {
-//                        this.___transaction.getObjectMapper().collectionToLazy(___proxiedObject, field, fc, ov, ___transaction);
-//                    }
-//
-//                } catch (IllegalAccessException | IllegalArgumentException ex) {
-//                    Logger.getLogger(ObjectProxy.class.getName()).log(Level.SEVERE, null, ex);
-//                }
-//            }
+            //ANALYZE WELL IF THIS CODE IS VALID OR UNNECESSARY AND REMOVE IT
+            // forzar la recarga de las colecciones.
+            LOGGER.log(Level.DEBUG, "Refrescando las colecciones indirectas...");
+            // ********************************************************************************************
+            // hidratar las colecciones indirectas
+            // procesar todos los indirectLinkslist
+            // ********************************************************************************************
+            for (Map.Entry<String, Class<?>> entry : classdef.indirectLinkLists.entrySet()) {
+                try {
+                    // FIXME: se debería considerar agregar una annotation EAGER!
+                    String field = entry.getKey();
+                    Class<?> fc = entry.getValue();
+                    LOGGER.log(Level.DEBUG, "Field: {}   Class: {}", new String[]{field, fc.getName()});
 
+                    Field fLink = classdef.fieldsObject.get(field);
+                    DIRECTION relationDirection = DIRECTION.IN;
 
-        //----------------------------------------------------------------------
-        //restart indirect collections to reload them
+                    Indirect in = fLink.getAnnotation(Indirect.class);
+                    String graphRelationName = in.linkName();
+
+                    // si hay Vértices conectados o si el constructor del objeto ha inicializado los vectores, convertirlos
+                    if ((ov.countEdges(relationDirection, graphRelationName) > 0) || (fLink.get(___proxiedObject) != null)) {
+                        this.___transaction.getObjectMapper().collectionToLazy(___proxiedObject, field, fc, ov, ___transaction);
+                    }
+
+                } catch (IllegalAccessException | IllegalArgumentException ex) {
+                    LOGGER.log(Level.ERROR, ex);
+                }
+            }
+
+            //----------------------------------------------------------------------
+            //restart indirect collections to reload them
 //        classdef.indirectLinks.keySet().forEach(field -> {
 //            Field f = classdef.fieldsObject.get(field);
 //                try {
@@ -708,24 +672,22 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
 //                    LOGGER.log(Level.SEVERE, "Error eager loading link list! " + f, ex);
 //            }
 //        });
-        //----------------------------------------------------------------------
-
+            //----------------------------------------------------------------------
+        } 
         // volver a establecer el estado de Dirty.
         this.___dirty = preservDirtyState;
     }
-    
-    
+
     /**
      * Loads the vertex links marked as eager load.
      */
-    
     @Override
     public void ___eagerLoad() {
         ClassDef classdef = getClassDef();
         if (classdef.isEager && this.___baseElement instanceof MutableVertex) {
 //            this.___transaction.initInternalTx();
             LOGGER.log(Level.DEBUG, "Eager loading of {}", this.___baseElement);
-            
+
             if (this.___baseClass.isAnnotationPresent(Eager.class)) {
                 //eager load of whole class
                 this.fullLoad();
@@ -739,58 +701,51 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
 //            this.___transaction.closeInternalTx();
         }
     }
-    
-    
+
     /**
      * Loads all the vertex links.
      */
-    
     @Override
     public void ___fullLoad() {
         this.fullLoad();
     }
-    
-    
+
     private void fullLoad() {
         ClassDef classdef = getClassDef();
         this.___loadLazyLinks();
         this.eagerLoadLinkLists(classdef, classdef.linkLists, false); //force load of link lists
         this.eagerLoadLinkLists(classdef, classdef.indirectLinkLists, false); //force load of indirect link lists
     }
-    
-    
+
     /**
      * Forces the load of collections of links.
      */
-    
     private void eagerLoadLinkLists(ClassDef classdef, HashMap<String, Class<?>> linksFields, boolean onlyEager) {
         linksFields.keySet().forEach(field -> {
             Field f = classdef.fieldsObject.get(field);
             if (!onlyEager || f.isAnnotationPresent(Eager.class)) {
-                ILazyCalls coll = (ILazyCalls)objectMapper().getFieldValue(this.___proxiedObject, f);
-                if (coll != null) coll.forceLoad();
+                ILazyCalls coll = (ILazyCalls) objectMapper().getFieldValue(this.___proxiedObject, f);
+                if (coll != null) {
+                    coll.forceLoad();
+                }
             }
         });
     }
 
-    
     @Override
     public boolean ___isValid() {
         return ___isValidObject;
     }
 
-    
     @Override
     public boolean ___isDirty() {
         return ___dirty;
     }
 
-
     /**
      * Marca el objeto como dirty para que sea considerado en el próximo commit
      *
      */
-    
     @Override
     public void ___setDirty() {
         if (!this.___dirty) {
@@ -803,7 +758,6 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
         }
     }
 
-    
     @Override
     public void ___removeDirtyMark() {
         this.___dirty = false;
@@ -816,16 +770,15 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
         }
     }
 
-    
     @Override
     public synchronized void ___commit() {
         LOGGER.log(Level.DEBUG, "Iniciando ___commit() ....");
         LOGGER.log(Level.DEBUG, "valid: {}", this.___isValidObject);
         LOGGER.log(Level.DEBUG, "dirty: {}", this.___dirty);
         LOGGER.log(Level.DEBUG, "rid: {}", this.___baseElement.getIdentity());
-        LOGGER.log(Level.DEBUG, "modified fields: {}", ((ITransparentDirtyDetector)this.___proxiedObject).___tdd___getModifiedFields());
-        
-        if (this.___dirty ) {            
+        LOGGER.log(Level.DEBUG, "modified fields: {}", ((ITransparentDirtyDetector) this.___proxiedObject).___tdd___getModifiedFields());
+
+        if (this.___dirty) {
 
             // obtener la definición de la clase
             ClassDef cDef = this.___transaction.getObjectMapper().getClassDef(this.___proxiedObject);
@@ -834,16 +787,27 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
             ObjectStruct oStruct = this.___transaction.getObjectMapper().objectStruct(this.___proxiedObject);
             Map<String, Object> omap = oStruct.fields;
 
+            if (!this.___isNew()) {
+                //dejar solo los campos que se hayan modificado
+                LOGGER.log(Level.DEBUG, "modified fields: " + String.join(", ", ((ITransparentDirtyDetector) this.___proxiedObject).___tdd___getModifiedFields()));
+                Set<String> retainFields = ((ITransparentDirtyDetector) this.___proxiedObject).___tdd___getModifiedFields();
+                // agregar los fields que son enums dado que se tratan como campos pero no reaccionan la TDD porque no hay forma de notifiarlos
+                retainFields.addAll(cDef.enumCollectionFields.keySet());
+                omap.keySet().retainAll(retainFields);
+            }
+
+            LOGGER.log(Level.DEBUG, "omap: " + omap);
+
             // bajar todo al vértice
             VertexUtils.fillElement(this.___baseElement, omap);
-            
+
             oStruct.removedProperties.forEach(prop -> this.___baseElement.modify().remove(prop));
 
             // guardar log de auditoría si corresponde.
-            if (this.___transaction.isAuditing() ) {
-                this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"UPDATE", omap);
+            if (this.___transaction.isAuditing()) {
+                this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "UPDATE", omap);
             }
-            
+
             // si se trata de un Vértice
             if (this.___baseElement instanceof Vertex) {
                 MutableVertex ov = this.___baseElement.asVertex().modify();
@@ -868,7 +832,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                             for (Edge edge : ov.getEdges(DIRECTION.OUT, graphRelationName)) {
                                 removeEdge = edge.modify();
                                 if (this.___transaction.isAuditing()) {
-                                    this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"REMOVE LINK: " + graphRelationName, removeEdge);
+                                    this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "REMOVE LINK: " + graphRelationName, removeEdge);
                                 }
                                 this.removeEdge(removeEdge, field);
                             }
@@ -899,21 +863,20 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                         LOGGER.log(Level.DEBUG, "Eliminar relación previa a " + removeEdge.getOut());
 
                                         if (this.___transaction.isAuditing()) {
-                                            this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"REMOVE LINK: " + graphRelationName, removeEdge);
+                                            this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "REMOVE LINK: " + graphRelationName, removeEdge);
                                         }
-                                        
+
                                         this.removeEdge(removeEdge, field);
-                                        
+
                                     }
                                 }
-                                LOGGER.log(Level.TRACE, "vertex out({}: {}",new Object[]{graphRelationName,ov.getEdges(DIRECTION.OUT, graphRelationName)});
-                                
-                                
+                                LOGGER.log(Level.TRACE, "vertex out({}: {}", new Object[]{graphRelationName, ov.getEdges(DIRECTION.OUT, graphRelationName)});
+
                                 LOGGER.log(Level.DEBUG, "Agregar un link entre dos objetos existentes.");
                                 MutableEdge oe = ov.newEdge(graphRelationName, ((IObjectProxy) innerO).___getVertex());
-                                
+
                                 if (this.___transaction.isAuditing()) {
-                                    this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"ADD LINK: " + graphRelationName, oe);
+                                    this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "ADD LINK: " + graphRelationName, oe);
                                 }
                             }
                         } else {
@@ -926,10 +889,10 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                 //MutableEdge removeEdge = null;
                                 while (ov.getEdges(DIRECTION.OUT, graphRelationName).iterator().hasNext()) {
                                     MutableEdge removeEdge = ov.getEdges(DIRECTION.OUT, graphRelationName).iterator().next().modify();
-                                    
+
                                     LOGGER.log(Level.DEBUG, "Eliminar relación previa a " + removeEdge.getOut());
                                     if (this.___transaction.isAuditing()) {
-                                        this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"REMOVE LINK: " + graphRelationName, removeEdge);
+                                        this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "REMOVE LINK: " + graphRelationName, removeEdge);
                                     }
                                     this.removeEdge(removeEdge, field);
                                 }
@@ -948,7 +911,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                             //MutableEdge oe = this.___transaction.getCurrentGraphDb().addEdge("class:" + graphRelationName, ov, ((IObjectProxy) innerO).___getVertex(), graphRelationName);
                             MutableEdge oe = ov.newEdge(graphRelationName, ((IObjectProxy) innerO).___getVertex());
                             if (this.___transaction.isAuditing()) {
-                                this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"ADD LINK: " + graphRelationName, oe);
+                                this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "ADD LINK: " + graphRelationName, oe);
                             }
                         }
                     }
@@ -986,18 +949,18 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                             if (collectionFieldValue instanceof List) {
                                 ILazyCollectionCalls lazyCollectionCalls;
                                 // procesar la colección
-                                LOGGER.log(Level.DEBUG, "{} es una lista. ",field);
-                                
+                                LOGGER.log(Level.DEBUG, "{} es una lista. ", field);
+
                                 if (ILazyCollectionCalls.class.isAssignableFrom(collectionFieldValue.getClass())) {
                                     LOGGER.log(Level.DEBUG, "ya implementa ILazyCollectionCalls");
                                     lazyCollectionCalls = (ILazyCollectionCalls) collectionFieldValue;
                                 } else {
                                     LOGGER.log(Level.DEBUG, "Colección nueva! Convertir.");
                                     // se ha asignado una colección original y se debe exportar todo
-                                    this.___transaction.getObjectMapper().collectionToLazy(this.___proxiedObject, 
-                                                                                           field,
-                                                                                           this.___baseElement.asVertex(),
-                                                                                           this.___transaction);
+                                    this.___transaction.getObjectMapper().collectionToLazy(this.___proxiedObject,
+                                            field,
+                                            this.___baseElement.asVertex(),
+                                            this.___transaction);
 
                                     //recuperar la nueva colección
                                     Collection inter = (Collection) f.get(this.___proxiedObject);
@@ -1036,13 +999,13 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
 
                                         // vincular el nodo
                                         //MutableEdge oe = this.___transaction.getCurrentGraphDb().addEdge("class:" + graphRelationName, this.___getVertex(), ((IObjectProxy) colObject).___getVertex(), graphRelationName);
-                                        LOGGER.log(Level.TRACE, "creando nueve edge {} --> {}",this.___baseElement.getIdentity().toString(),
-                                                                                                                        ((IObjectProxy) colObject).___getVertex().getIdentity().toString()
-                                                                                                                        );
+                                        LOGGER.log(Level.TRACE, "creando nueve edge {} --> {}", this.___baseElement.getIdentity().toString(),
+                                                ((IObjectProxy) colObject).___getVertex().getIdentity().toString()
+                                        );
                                         MutableEdge oe = this.___getVertex().newEdge(graphRelationName, ((IObjectProxy) colObject).___getVertex());
                                         oe.save();
                                         if (this.___transaction.isAuditing()) {
-                                            this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"LINKLIST ADD: " + graphRelationName, oe);
+                                            this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST ADD: " + graphRelationName, oe);
                                         }
                                     }
                                 }
@@ -1051,10 +1014,10 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                 for (Map.Entry<Object, ObjectCollectionState> entry1 : colState.entrySet()) {
                                     Object colObject = entry1.getKey();
                                     ObjectCollectionState colObjState = entry1.getValue();
-                                    LOGGER.log(Level.TRACE, "{} : {}", 
-                                                                                            colObject.toString(),
-                                                                                            colObjState.toString()
-                                                                                            );
+                                    LOGGER.log(Level.TRACE, "{} : {}",
+                                            colObject.toString(),
+                                            colObjState.toString()
+                                    );
                                     if (colObjState == ObjectCollectionState.REMOVED) {
                                         LOGGER.log(Level.TRACE, "objeto borrado: {}", ((IObjectProxy) colObject).___getVertex().getIdentity().toString());
                                         // remover el link
@@ -1062,23 +1025,23 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                         //        .getEdges(((IObjectProxy) colObject).___getVertex(),
                                         //                ODirection.OUT,
                                         //                graphRelationName))
-                                        
-                                        Iterator<Edge> edges = ((MutableVertex) this.___baseElement).getEdges(DIRECTION.OUT, graphRelationName).iterator(); 
-                                        while (edges.hasNext()){
+
+                                        Iterator<Edge> edges = ((MutableVertex) this.___baseElement).getEdges(DIRECTION.OUT, graphRelationName).iterator();
+                                        while (edges.hasNext()) {
                                             MutableEdge edge = edges.next().modify();
-                                            LOGGER.log(Level.TRACE, "edge in: {} -- out --> {}",edge.getIn().toString(),edge.getOut().toString());
+                                            LOGGER.log(Level.TRACE, "edge in: {} -- out --> {}", edge.getIn().toString(), edge.getOut().toString());
                                             if (edge.getIn().toString().equals(((IObjectProxy) colObject).___getVertex().getIdentity().toString())) {
                                                 if (this.___transaction.isAuditing()) {
-                                                    this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"LINKLIST REMOVE: " + graphRelationName, edge);
+                                                    this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST REMOVE: " + graphRelationName, edge);
                                                 }
                                                 edge.delete();
                                             }
                                         }
-                                        
+
                                         // si existe la anotación, remover tambien el vertex
                                         if (f.isAnnotationPresent(RemoveOrphan.class)) {
                                             if (this.___transaction.isAuditing()) {
-                                                this.___transaction.auditLog(this, AuditType.DELETE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"LINKLIST DELETE: " + graphRelationName, colObject);
+                                                this.___transaction.auditLog(this, AuditType.DELETE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST DELETE: " + graphRelationName, colObject);
                                             }
                                             this.___transaction.delete(colObject);
                                         }
@@ -1086,7 +1049,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                 }
 
                             } else if (collectionFieldValue instanceof Map) {
-                                LOGGER.log(Level.DEBUG, "{} es un MAP. ",field);
+                                LOGGER.log(Level.DEBUG, "{} es un MAP. ", field);
                                 Map mapFieldValue;
                                 // procesar la colección
 
@@ -1095,10 +1058,10 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                 } else {
                                     // se ha asignado una colección original y se debe exportar todo
                                     LOGGER.log(Level.DEBUG, "Map primitivo detectado. Se debe convertir y exportar todo lo que contenga.");
-                                    this.___transaction.getObjectMapper().collectionToLazy(this.___proxiedObject, 
-                                                                                           field, 
-                                                                                           this.___baseElement.asVertex(), 
-                                                                                           this.___transaction);
+                                    this.___transaction.getObjectMapper().collectionToLazy(this.___proxiedObject,
+                                            field,
+                                            this.___baseElement.asVertex(),
+                                            this.___transaction);
                                     //recuperar la nueva colección
                                     // Collection inter = (Collection) f.get(this.realObj);
                                     Map inter = (Map) f.get(this.___proxiedObject);
@@ -1107,18 +1070,18 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                     //preparar la interface para que se continúe con el acceso.
                                     mapFieldValue = (Map) inter;
                                 }
-                                
+
                                 // refrescar los estados
                                 ILazyMapCalls lazyMap = (ILazyMapCalls) mapFieldValue;
                                 final Map<Object, ObjectCollectionState> keysState = lazyMap.getKeyState();
                                 final Map<Object, Edge> keysToEdges = lazyMap.getKeyToEdge();
                                 final Map<Object, ObjectCollectionState> entitiesState = lazyMap.getEntitiesState();
-                                
+
                                 LOGGER.log(Level.DEBUG, "current Values: {}", lazyMap);
                                 LOGGER.log(Level.DEBUG, "map keyState: {}", keysState);
                                 LOGGER.log(Level.DEBUG, "map keyToEdges: {}", keysToEdges);
                                 LOGGER.log(Level.DEBUG, "map entityState: {}", entitiesState);
-                                
+
                                 // recorrer todas las claves del mapa
                                 for (Map.Entry<Object, ObjectCollectionState> entry1 : keysState.entrySet()) {
                                     Object key = entry1.getKey();
@@ -1127,9 +1090,9 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                     LOGGER.log(Level.DEBUG, "imk: {} state: {}", new Object[]{key, keyState});
                                     // para cada entrada, verificar la existencia del objeto y crear un Edge.
                                     Object linkedO = mapFieldValue.get(key);
-                                    
-                                    if (keyState != ObjectCollectionState.REMOVED &&
-                                            !(linkedO instanceof IObjectProxy)) {
+
+                                    if (keyState != ObjectCollectionState.REMOVED
+                                            && !(linkedO instanceof IObjectProxy)) {
                                         LOGGER.log(Level.DEBUG, "Link Map Object nuevo. Crear un vértice y un link");
                                         linkedO = this.___transaction.store(linkedO);
                                         mapFieldValue.replace(key, linkedO);
@@ -1145,15 +1108,15 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                             MutableVertex to = ((IObjectProxy) linkedO).___getVertex().modify();
                                             MutableEdge edge = null;
                                             boolean newEdge = true;
-                                            
+
                                             // if key already a IObjectProxy, check the status of the edge to recreate it if invalid (previous failed commit)
                                             if (key instanceof IObjectProxy) {
-                                                edge = ((IObjectProxy)key).___getEdge().modify();
+                                                edge = ((IObjectProxy) key).___getEdge().modify();
                                                 if (Objects.equals(to, edge.getInVertex())) {
                                                     newEdge = false; // valid edge
                                                 }
                                             }
-                                            
+
                                             if (newEdge) {
                                                 // crear un link entre los dos objetos.
                                                 edge = this.___baseElement.asVertex().modify().newEdge(graphRelationName, to);
@@ -1162,13 +1125,13 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                                 //this.___transaction.getObjectMapper().fillSequenceFields(key, this.___transaction, null);
                                                 VertexUtils.fillElement(edge, this.___transaction.getObjectMapper().simpleMap(key));
                                                 edge.save();
-                                                LOGGER.log(Level.TRACE, "edge: {}   from(out): {} ---> to(in): {}",edge.getIdentity(),edge.getOut(), edge.getIn());
+                                                LOGGER.log(Level.TRACE, "edge: {}   from(out): {} ---> to(in): {}", edge.getIdentity(), edge.getOut(), edge.getIn());
                                             }
 
                                             if (this.___transaction.isAuditing()) {
-                                                this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"LINKLIST ADD: " + graphRelationName, edge);
+                                                this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST ADD: " + graphRelationName, edge);
                                             }
-                                            
+
                                             //update the map with the managed key
                                             lazyMap.updateKey(key, edge);
                                             break;
@@ -1184,7 +1147,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                                 throw new IllegalStateException("The edge object couldn't be found. "
                                                         + "Make sure its hashCode is change-proof.");
                                             }
-                                            
+
                                             // verificar si corresponde borrar el vértice en caso de estar marcado con @RemoveOrphan.
                                             boolean removeOrphan = false;
                                             if (f.isAnnotationPresent(RemoveOrphan.class)) {
@@ -1192,28 +1155,28 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                                     removeOrphan = true;
                                                 }
                                             }
-                                            removeEdge(graphRelationName, oeRemove.modify(), removeOrphan ?
-                                                    (IObjectProxy)linkedO : null);
+                                            removeEdge(graphRelationName, oeRemove.modify(), removeOrphan
+                                                    ? (IObjectProxy) linkedO : null);
                                             break;
                                     }
                                 }
-                                
+
                                 LOGGER.log(Level.TRACE, "remove entities marked as removed");
-                                LOGGER.log(Level.TRACE, "entityStates: {}",entitiesState);
+                                LOGGER.log(Level.TRACE, "entityStates: {}", entitiesState);
                                 for (Map.Entry<Object, ObjectCollectionState> e : entitiesState.entrySet()) {
                                     Object value = e.getKey();
                                     ObjectCollectionState valueState = e.getValue();
-                                    LOGGER.log(Level.TRACE, "entity: {} - state: {} - IObjectProxy: {}",value, valueState, (value instanceof IObjectProxy));
+                                    LOGGER.log(Level.TRACE, "entity: {} - state: {} - IObjectProxy: {}", value, valueState, (value instanceof IObjectProxy));
                                     if (value instanceof IObjectProxy && valueState == ObjectCollectionState.REMOVED) {
                                         //we must remove the old edge
-                                        IObjectProxy valueop = (IObjectProxy)value;
+                                        IObjectProxy valueop = (IObjectProxy) value;
                                         boolean removeOrphan = f.isAnnotationPresent(RemoveOrphan.class);
                                         LOGGER.log(Level.TRACE, "v: {} - edges: {} - from (out): {} - to(in): {}",
                                                 valueop.___getRid(),
                                                 valueop.___getVertex().getEdges().size(),
                                                 valueop.___getVertex().getEdges(DIRECTION.OUT, graphRelationName).size(),
                                                 valueop.___getVertex().getEdges(DIRECTION.IN, graphRelationName).size()
-                                                );
+                                        );
                                         valueop.___getVertex().getEdges(DIRECTION.IN, graphRelationName).forEach(edge -> {
                                             LOGGER.log(Level.TRACE, "edge: {} - edge.getInVertex: {}", edge.asEdge(), edge.asEdge().getInVertex());
                                             if (Objects.equals(this.___baseElement, edge.asEdge().getOutVertex())) {
@@ -1223,7 +1186,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                                         });
                                     }
                                 }
-                                
+
                             } else {
                                 LOGGER.log(Level.DEBUG, "********************************************");
                                 LOGGER.log(Level.DEBUG, "field: {}", field);
@@ -1232,53 +1195,49 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                             }
                         }
                     } catch (IllegalArgumentException | IllegalAccessException ex) {
-                        LOGGER.log(Level.ERROR, "ERROR",ex);
+                        LOGGER.log(Level.ERROR, "ERROR", ex);
                     }
                 }
             }
-            
+
             //if we must update version field, enqueue in transaction
             if (cDef.versionField != null) {
-                this.___transaction.processAfterDbCommit((IObjectProxy)this.___proxiedObject);
+                this.___transaction.processAfterDbCommit((IObjectProxy) this.___proxiedObject);
             }
-            
+
             // grabar los cambios
             this.___baseElement.modify().save();
-            
+
 //            this.___transaction.closeInternalTx();
         }
         LOGGER.log(Level.DEBUG, "fin commit ----");
     }
-    
-    
+
     private void removeEdge(String graphRelationName, MutableEdge edge, IObjectProxy vertexToRemove) {
         if (this.___transaction.isAuditing()) {
-            this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"LINKLIST REMOVE: " + graphRelationName, edge);
+            this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST REMOVE: " + graphRelationName, edge);
         }
         // FIXME: ojo que esto puede haber cambiado.
         edge.reload();
         //--- 
-        
+
         edge.delete();
         if (vertexToRemove != null) {
             this.___transaction.delete(vertexToRemove);
             if (this.___transaction.isAuditing()) {
-                this.___transaction.auditLog(this, AuditType.DELETE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"LINKLIST REMOVE: " + graphRelationName, vertexToRemove);
+                this.___transaction.auditLog(this, AuditType.DELETE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST REMOVE: " + graphRelationName, vertexToRemove);
             }
         }
     }
-    
 
     /**
      * Refresca el objeto base recuperándolo nuevamente desde la base de datos.
      */
-    
     @Override
     public void ___reload() {
         //FIXME: reload() no funciona. Workaround para recargar los datos.
         this.___baseElement.reload();
     }
-
 
     /**
      * Función de uso interno para remover un eje
@@ -1286,7 +1245,6 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
      * @param edgeToRemove
      * @param field
      */
-    
     private synchronized void removeEdge(MutableEdge edgeToRemove, String field) {
         try {
             ClassDef classdef = this.___transaction.getObjectMapper().getClassDef(___baseClass);
@@ -1306,7 +1264,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                 LOGGER.log(Level.DEBUG, "Remove orphan presente");
                 //auditar
                 if (this.___transaction.isAuditing()) {
-                    this.___transaction.auditLog(this, AuditType.DELETE, (this.___auditLogLabel!=null?this.___auditLogLabel+" : ":"")+"LINKLIST DELETE: ", edgeToRemove + " : " + field + " : " + f.get(this.___proxiedObject));
+                    this.___transaction.auditLog(this, AuditType.DELETE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST DELETE: ", edgeToRemove + " : " + field + " : " + f.get(this.___proxiedObject));
                 }
                 // eliminar el objecto
                 // this.sm.delete(f.get(realObj));
@@ -1320,15 +1278,13 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
             }
 
         } catch (SecurityException | IllegalArgumentException | IllegalAccessException ex) {
-            LOGGER.log(Level.ERROR, "ERROR",ex);
+            LOGGER.log(Level.ERROR, "ERROR", ex);
         }
     }
-
 
     /**
      * Revierte el objeto al estado que tiene el Vertex original.
      */
-    
     @Override
     public synchronized void ___rollback() {
         LOGGER.log(Level.DEBUG, "\n\n******************* ROLLBACK *******************\n\n");
@@ -1356,25 +1312,22 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
         // restaurar los atributos al estado original.
         ObjectMapper objectMapper = objectMapper();
         ClassDef classdef = getClassDef();
-        
-        
+
         LOGGER.log(Level.DEBUG, "Reverting basic attributes.........");
         LOGGER.log(Level.DEBUG, "baseElement map: {}", this.___baseElement.propertiesAsMap());
-        
+
         for (var entry : classdef.fields.entrySet()) {
             String prop = entry.getKey();
             if (!classdef.embeddedFields.containsKey(prop)) {
                 Object value = this.___baseElement.get(prop);
-                LOGGER.log(Level.DEBUG, "Rollingback field {} :- old value -> ", new Object[]{prop,value});
+                LOGGER.log(Level.DEBUG, "Rollingback field {} :- old value -> ", new Object[]{prop, value});
                 objectMapper.setFieldValue(___proxiedObject, prop, value);
             }
         }
-        
 
         LOGGER.log(Level.DEBUG, "Reverting embedded collections.........");
         this.___transaction.getObjectMapper().hydrateEmbeddedCollections(
-                classdef, (IObjectProxy)this.___proxiedObject, this.___baseElement);
-        
+                classdef, (IObjectProxy) this.___proxiedObject, this.___baseElement);
 
         // procesar los enum
         Field f;
@@ -1392,18 +1345,14 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                 }
                 LOGGER.log(Level.DEBUG, "hidratado campo: {}={}", new Object[]{prop, value});
             } catch (IllegalArgumentException | IllegalAccessException ex) {
-                LOGGER.log(Level.ERROR, "ERROR",ex);
+                LOGGER.log(Level.ERROR, "ERROR", ex);
             }
         }
 
-
-        
         LOGGER.log(Level.DEBUG, "Reverting enum collections.........");
         this.___transaction.getObjectMapper().hydrateEnumCollections(
-                classdef, (IObjectProxy)this.___proxiedObject, this.___baseElement);
-        
+                classdef, (IObjectProxy) this.___proxiedObject, this.___baseElement);
 
-        
         LOGGER.log(Level.DEBUG, "Revirtiendo los Links......... ");
         // hidratar los atributos @links
         // procesar todos los links
@@ -1413,7 +1362,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
                 Field fLink = classdef.fieldsObject.get(field);
                 fLink.set(this.___proxiedObject, null);
             } catch (SecurityException | IllegalArgumentException | IllegalAccessException ex) {
-                LOGGER.log(Level.ERROR, "ERROR",ex);
+                LOGGER.log(Level.ERROR, "ERROR", ex);
             }
         }
         // volver a activar la carga de los links
@@ -1430,7 +1379,22 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
             Field fLink = classdef.fieldsObject.get(field);
             Object coll = objectMapper.getFieldValue(this.___proxiedObject, fLink);
             if (coll != null && coll instanceof ILazyCalls) {
-                ((ILazyCalls)coll).rollback();
+                ((ILazyCalls) coll).rollback();
+            } else {
+                objectMapper.setFieldValue(this.___proxiedObject, fLink, null);
+            }
+        }
+
+        LOGGER.log(Level.DEBUG, "Revirtiendo las colecciones indirectas...");
+        for (Map.Entry<String, Class<?>> entry : classdef.indirectLinkLists.entrySet()) {
+            String field = entry.getKey();
+            Class<?> fc = entry.getValue();
+            LOGGER.log(Level.DEBUG, "Field: {}   Class: {}", field, fc.getName());
+
+            Field fLink = classdef.fieldsObject.get(field);
+            Object coll = objectMapper.getFieldValue(this.___proxiedObject, fLink);
+            if (coll != null && coll instanceof ILazyCalls) {
+                ((ILazyCalls) coll).rollback();
             } else {
                 objectMapper.setFieldValue(this.___proxiedObject, fLink, null);
             }
@@ -1439,12 +1403,10 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
         this.___removeDirtyMark();
 //        this.___transaction.closeInternalTx();
     }
-    
-    
+
     /**
      * Reset dirty status of object and collections after a successful commit.
      */
-    
     @Override
     public synchronized void ___commitSuccessful() {
 //        this.___transaction.initInternalTx();
@@ -1453,21 +1415,19 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor{
         classdef.linkLists.keySet().stream().
                 map(fieldName -> classdef.fieldsObject.get(fieldName)).
                 map(field -> objectMapper.getFieldValue(this.___proxiedObject, field)).
-                filter(coll -> (coll != null && coll instanceof ILazyCalls && ((ILazyCalls)coll).isDirty())).
-                forEach(coll -> ((ILazyCalls)coll).clearState());
+                filter(coll -> (coll != null && coll instanceof ILazyCalls && ((ILazyCalls) coll).isDirty())).
+                forEach(coll -> ((ILazyCalls) coll).clearState());
+        this.updateIndirectLinks();
         this.___removeDirtyMark();
 //        this.___transaction.closeInternalTx();
     }
 
-    
     private ClassDef getClassDef() {
         return this.___transaction.getObjectMapper().getClassDef(this.___baseClass);
     }
-    
-    
+
     private ObjectMapper objectMapper() {
         return this.___transaction.getObjectMapper();
     }
 
-    
 }

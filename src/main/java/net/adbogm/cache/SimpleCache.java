@@ -79,7 +79,7 @@ public class SimpleCache implements Cache {
         WeakReference<Object> wr = this.cache.get(key);
         if (wr != null) {
             LOGGER.log(Level.TRACE, "\n\n\ncache enqueued: "+wr.isEnqueued()+"\n\n\n");
-            if (!wr.isEnqueued())
+            if (!wr.refersTo(null))
                 r = wr.get();
             if (r == null) {
                 remove(key);

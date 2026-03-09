@@ -35,12 +35,12 @@ public class DbManagerTest {
     public void edgeClass() throws Exception {
         List<String> l = dbm.generateDBSQL("test");
         assertTrue(l.stream().anyMatch(
-                s -> s.contains("create class EdgeAttrib extends E")));
+                s -> s.contains("create edge type EdgeAttrib if not exists")));
         assertTrue(l.stream().anyMatch(s -> s.contains(
-                "create class SimpleVertexEx_ohmSVE extends EdgeAttrib")));
+                "create edge type SimpleVertexEx_ohmSVE extends EdgeAttrib if not exists")));
         //las demás deben seguir como antes
         assertTrue(l.stream().anyMatch(s -> s.contains(
-                "create class SimpleVertex extends V")));
+                "create vertex type SimpleVertex if not exists")));
     }
     
     /*

@@ -1,7 +1,6 @@
 package test;
 
 import net.adbogm.annotations.Entity;
-import net.adbogm.annotations.Sequence;
 
 /**
  *
@@ -10,13 +9,14 @@ import net.adbogm.annotations.Sequence;
 @Entity
 public class Serial {
     
-    @Sequence(sequenceName = "test_sequence")
+    //@Sequence(sequenceName = "test_sequence")
     public Long s1;
     
-    @Sequence(sequenceName = "test_sequence")
+    //@Sequence(sequenceName = "test_sequence")
     public Long s2;
 
-
+    public Long autoinc;
+    
     public Serial() {
     }
     

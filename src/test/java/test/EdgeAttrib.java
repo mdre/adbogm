@@ -27,7 +27,8 @@ public class EdgeAttrib {
     private String nota;
     private Date fecha;
     private EnumTest enumValue;
-    @Sequence(sequenceName = "test_sequence") private Long serial;
+    @Sequence(sequenceName = "test_sequence") 
+    private Long serial;
 
     public EdgeAttrib() {
     }

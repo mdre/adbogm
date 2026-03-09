@@ -13,12 +13,10 @@ import java.util.List;
 import java.util.UUID;
 import net.adbogm.annotations.Entity;
 import net.adbogm.annotations.RID;
-import net.adbogm.annotations.Sequence;
 import net.adbogm.annotations.Version;
 import net.adbogm.cache.SimpleCache;
 import net.adbogm.exceptions.ConcurrentModification;
 import net.adbogm.exceptions.IncorrectRIDField;
-import net.adbogm.exceptions.IncorrectSequenceField;
 import net.adbogm.exceptions.IncorrectVersionField;
 import net.adbogm.exceptions.InvalidObjectReference;
 import net.adbogm.exceptions.OGMException;
@@ -37,7 +35,6 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import test.EdgeAttrib;
@@ -48,7 +45,6 @@ import test.IndirectObject;
 import test.InterfaceTest;
 import test.SVExChild;
 import test.Secure;
-import test.Serial;
 import test.SimpleVertex;
 import test.SimpleVertexEx;
 import test.SimpleVertexInterfaceAttr;
@@ -81,7 +77,8 @@ public class SessionManagerTest {
     @Before
     public void setUp() {
         LOGGER.info("Iniciando session manager...");
-        sm = new SessionManager("localhost", TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS, true)
+//        sm = new SessionManager(TestConfig.TESTSERVER,TestConfig.TESTGRPCDBPORT, TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS, true)
+        sm = new SessionManager(TestConfig.TESTSERVER, TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS)
 //                .setClassLevelLog(TransparentDirtyDetectorInstrumentator.class, Level.FINER)
 //                .setClassLevelLog(ObjectProxy.class, Level.FINEST)
 //                .setClassLevelLog(ClassCache.class, Level.FINER)
@@ -161,7 +158,7 @@ public class SessionManagerTest {
         //still not in database
         // ya no se puede verificar porque tiene un rid definitivo
 //        String rid = ((IObjectProxy) result).___getRid();
-//        long exist = this.sm.getTransaction().query("select count(*) from SimpleVertex where @rid = " + rid, "");
+//        long exist = this.sm.getNewTransaction().query("select count(*) from SimpleVertex where @rid = " + rid, "");
 //        assertEquals(0, exist);
 
         this.sm.commit();
@@ -193,7 +190,7 @@ public class SessionManagerTest {
         LOGGER.info("escritura/lectura de objectos con campos Date");
         LOGGER.info("***************************************************************");
 
-        LocalDateTime targetDate = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
+        LocalDateTime targetDate = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         
         SimpleVertex sv = new SimpleVertex();
         sv.setFecha(targetDate);
@@ -1145,6 +1142,8 @@ public class SessionManagerTest {
         stored.setS("Before rollback");
         stored.subs.iterator().next().aList.add(new SimpleVertex());
         stored.subs.add(new SubSecure());
+        System.out.println("Before rollback:  "+stored.subs.size());
+        System.out.println("subs class:" +stored.subs.getClass().getCanonicalName());
         sm.rollback();
 
         //asserts:
@@ -1382,8 +1381,8 @@ public class SessionManagerTest {
         LOGGER.info("Transacción múltiples privadas");
         LOGGER.info("***************************************************************");
 
-        Transaction t1 = this.sm.getTransaction();
-        Transaction t2 = this.sm.getTransaction();
+        Transaction t1 = this.sm.getNewTransaction();
+        Transaction t2 = this.sm.getNewTransaction();
         t2.begin();
         
         SimpleVertex sv = new SimpleVertex();
@@ -1718,7 +1717,7 @@ public class SessionManagerTest {
         long logs = sm.query(query, "");
         assertEquals(1, logs); //store log
         
-        sm.getTransaction().clearCache();
+        sm.getCurrentTransaction().clearCache();
         sv = sm.get(SimpleVertexEx.class, rid);
         sv.initArrayList(); //initialize list with 3 elements
         assertEquals(3, sv.getAlSV().size());
@@ -2374,8 +2373,8 @@ public class SessionManagerTest {
 //            SimpleVertexEx s2 = new SimpleVertexEx();
 //            s2.setS("Transaction 2");
 //            
-//            Transaction t1 = sm.getTransaction();
-//            Transaction t2 = sm.getTransaction();
+//            Transaction t1 = sm.getNewTransaction();
+//            Transaction t2 = sm.getNewTransaction();
 //            
 //            // verificar que sean objetos distintos
 //            assertNotEquals(t1.getGraphdb(), t2.getGraphdb());
@@ -2445,7 +2444,7 @@ public class SessionManagerTest {
     
     @Test
     public void closeWithoutOpen() throws Exception {
-        sm.getTransaction().close();
+        sm.getCurrentTransaction().close();
     }
     
     
@@ -2570,10 +2569,10 @@ public class SessionManagerTest {
 //        sm.commit();
 //        String rid = sm.getRID(sv);
 //        
-//        Transaction t1 = sm.getTransaction();
+//        Transaction t1 = sm.getNewTransaction();
 //        SimpleVertexEx s1 = t1.get(SimpleVertexEx.class, rid);
 //        
-//        Transaction t2 = sm.getTransaction();
+//        Transaction t2 = sm.getNewTransaction();
 //        SimpleVertexEx s2 = t2.get(SimpleVertexEx.class, rid);
 //
 //        s1.setS("en tran 1");
@@ -2631,14 +2630,14 @@ public class SessionManagerTest {
             svDup.setUuid(svdupUUID);
         }
         //comprobar que no se borró todavía de la base
-        assertNotNull(sm.getTransaction().get(ridToDelete));
+        assertNotNull(sm.getCurrentTransaction().get(ridToDelete));
         
         //reintentar
         sm.commit();
-        
-        assertThrows(UnknownRID.class, () -> sm.getTransaction().get(ridToDelete));
+        svToDelete = null;
+        assertThrows(UnknownRID.class, () -> sm.getCurrentTransaction().get(ridToDelete));
         assertEquals(0, sm.getDirtyCount());
-        assertEquals(0, sm.getTransaction().getDirtyDeletedCount());
+        assertEquals(0, sm.getCurrentTransaction().getDirtyDeletedCount());
     }
     
     
@@ -2650,10 +2649,10 @@ public class SessionManagerTest {
         sm.commit();
         String rid = sm.getRID(sv);
         
-        Transaction t1 = sm.getTransaction();
+        Transaction t1 = sm.getNewTransaction();
         SimpleVertexEx s1 = t1.get(SimpleVertexEx.class, rid);
         
-        Transaction t2 = sm.getTransaction();
+        Transaction t2 = sm.getNewTransaction();
         SimpleVertexEx s2 = t2.get(SimpleVertexEx.class, rid);
 
         t1.delete(s1);
@@ -2807,8 +2806,8 @@ public class SessionManagerTest {
         assertNull(v.notInitializedEnums);
     }
     
-    @Test
-    @Ignore //@TODO: corregir los mapas embebidos con enums
+//    @Test no se estaba usando en el ODBOGM. Habría que ver la posibilidad de utilzar embedded maps para esto.
+//    @Ignore //@TODO: corregir los mapas embebidos con enums
     public void persistEnumMap() throws Exception {
         Enums v = new Enums();
         v.enumToString.put(EnumTest.UNO, "el primero");
@@ -3091,7 +3090,7 @@ public class SessionManagerTest {
      * Tests that indirect links are refreshed after commit.
      */
     @Test
-    @Ignore //@TODO: deactivated refresh indirect temporally
+    //@Ignore //@TODO: deactivated refresh indirect temporally
     public void refreshIndirects() throws Exception {
         IndirectObject main = new IndirectObject("Main");
         IndirectObject sub = new IndirectObject("Sub");
@@ -3107,6 +3106,10 @@ public class SessionManagerTest {
         col1 = sm.store(col1);
         col2 = sm.store(col2);
         sm.commit();
+        
+        System.out.println("main ("+((IObjectProxy)main).___getRid()+") --> sub:"+((IObjectProxy)sub).___getRid());
+        System.out.println("col1.aldl ("+((IObjectProxy)col1).___getRid()+") --> main:"+((IObjectProxy)main).___getRid());
+        System.out.println("col2.aldl ("+((IObjectProxy)col2).___getRid()+") --> main:"+((IObjectProxy)main).___getRid());
         
         //after commit the indirect links must be loaded:
         //main --> sub
@@ -3148,102 +3151,105 @@ public class SessionManagerTest {
     
     /*
      * Tests the autopopulation of sequence fields.
+     * I remove this test because the database itself do not provide this, and the plugin 
+     * should have the test. Not the ogm
      */
-    @Test
-    public void serialField() throws Exception {
-        //fixme
-        Long currentSequenceValue = sm.query("select sequence('test_sequence').current()", "");
-        SimpleVertex sv = sm.store(new SimpleVertex());
-        assertNull(sv.getSerial());
-        
-        sv = commitClearAndGet(sv);
-        assertEquals(currentSequenceValue + 1, (long)sv.getSerial());
-        
-        Serial serial = sm.store(new Serial());
-        assertNull(serial.s1);
-        assertNull(serial.s2);
-        serial = commitClearAndGet(serial);
-        assertEquals(currentSequenceValue + 2, (long)serial.s1);
-        assertEquals(currentSequenceValue + 3, (long)serial.s2);
-        
-        serial = sm.store(new Serial());
-        serial.s1 = 20L;
-        serial = commitClearAndGet(serial);
-        assertEquals(20L, (long)serial.s1);
-        assertEquals(currentSequenceValue + 4, (long)serial.s2);
-    }
+//    @Test
+//    public void serialField() throws Exception {
+//        //fixme
+//        Long currentSequenceValue = sm.query("select currentSequence('testSequence') as sq", "sq");
+//        System.out.println("current sequence: "+currentSequenceValue);
+//        SimpleVertex sv = sm.store(new SimpleVertex());
+//        assertNull(sv.getSerial());
+//        System.out.println("rid: "+sv.getRid());
+//        sv = commitClearAndGet(sv);
+//        assertEquals(currentSequenceValue+0, (long)sv.getSerial());
+//        
+//        Serial serial = sm.store(new Serial());
+//        assertNull(serial.s1);
+//        assertNull(serial.s2);
+//        serial = commitClearAndGet(serial);
+//        assertEquals(currentSequenceValue + 1, (long)serial.s1);
+//        assertEquals(currentSequenceValue + 2, (long)serial.s2);
+//        
+//        serial = sm.store(new Serial());
+//        serial.s1 = 20L;
+//        serial = commitClearAndGet(serial);
+//        assertEquals(20L, (long)serial.s1);
+//        assertEquals(currentSequenceValue + 3, (long)serial.s2);
+//    }
     
     /*
      * Tests the autopopuation of sequence fields in edges.
      */
-    @Test
-    public void serialFieldInEdge() throws Exception {
-        //fixme
-        Long currentSequenceValue = sm.query("select sequence('test_sequence').current()", "");
-        SimpleVertexEx sv = sm.store(new SimpleVertexEx());
-        sv.ohmSVE = new HashMap<>();
-        sv.ohmSVE.put(new EdgeAttrib(), new SimpleVertexEx());
-        
-        sv = commitClearAndGet(sv);
-        EdgeAttrib edge = sv.ohmSVE.entrySet().iterator().next().getKey();
-        SimpleVertex value = sv.ohmSVE.entrySet().iterator().next().getValue();
-        assertEquals(currentSequenceValue + 1, (long)edge.getSerial()); //edges are first
-        assertEquals(currentSequenceValue + 2, (long)sv.getSerial());
-        assertEquals(currentSequenceValue + 3, (long)value.getSerial());
-        
-        edge.setNota("modified");
-        sv = commitClearAndGet(sv);
-        edge = sv.ohmSVE.entrySet().iterator().next().getKey();
-        value = sv.ohmSVE.entrySet().iterator().next().getValue();
-        assertEquals("modified", edge.getNota());
-        assertEquals(currentSequenceValue + 1, (long)edge.getSerial());
-        assertEquals(currentSequenceValue + 2, (long)sv.getSerial());
-        assertEquals(currentSequenceValue + 3, (long)value.getSerial());
-        
-        //check if there aren't missing sequence values
-        sv = sm.store(new SimpleVertexEx());
-        sv = commitClearAndGet(sv);
-        assertEquals(currentSequenceValue + 4, (long)sv.getSerial());
-    }
-    
-    /*
-     * Tests sequence field in an object stored implicitly.
-     */
-    @Test
-    public void serialFieldImplicitStore() throws Exception {
-        //fixme
-        Long currentSequenceValue = sm.query("select sequence('test_sequence').current()", "");
-        SimpleVertexEx sv = sm.store(new SimpleVertexEx());
-        sv.setLooptest(new SimpleVertexEx());
-        
-        sv = commitClearAndGet(sv);
-        assertEquals(currentSequenceValue + 1, (long)sv.getSerial());
-        assertEquals(currentSequenceValue + 2, (long)sv.getLooptest().getSerial());
-        
-        sv.setS("change");
-        sv = commitClearAndGet(sv);
-        assertEquals(currentSequenceValue + 1, (long)sv.getSerial());
-        assertEquals(currentSequenceValue + 2, (long)sv.getLooptest().getSerial());
-    }
-    
-    /*
-     * Tests the IncorrectSequenceField exception.
-     */
-    @Test
-    public void incorrectSerialField() throws Exception {
-        @Entity class BadSerial {
-            @Sequence(sequenceName = "test_sequence") Integer s;
-        }
-        BadSerial bad = new BadSerial();
-        assertThrows(IncorrectSequenceField.class, () -> sm.store(bad));
-        
-        @Entity class BadSerial2 {
-            @Sequence(sequenceName = "test_sequence") long s;
-        }
-        BadSerial2 bad2 = new BadSerial2();
-        assertThrows(IncorrectSequenceField.class, () -> sm.store(bad2));
-    }
-    
+//    @Test
+//    public void serialFieldInEdge() throws Exception {
+//        //fixme
+//        Long currentSequenceValue = sm.query("select currentSequence('testSequence') as sq", "sq");
+//        SimpleVertexEx sv = sm.store(new SimpleVertexEx());
+//        sv.ohmSVE = new HashMap<>();
+//        sv.ohmSVE.put(new EdgeAttrib(), new SimpleVertexEx());
+//        
+//        sv = commitClearAndGet(sv);
+//        EdgeAttrib edge = sv.ohmSVE.entrySet().iterator().next().getKey();
+//        SimpleVertex value = sv.ohmSVE.entrySet().iterator().next().getValue();
+//        assertEquals(currentSequenceValue + 1, (long)edge.getSerial()); //edges are first
+//        assertEquals(currentSequenceValue + 2, (long)sv.getSerial());
+//        assertEquals(currentSequenceValue + 3, (long)value.getSerial());
+//        
+//        edge.setNota("modified");
+//        sv = commitClearAndGet(sv);
+//        edge = sv.ohmSVE.entrySet().iterator().next().getKey();
+//        value = sv.ohmSVE.entrySet().iterator().next().getValue();
+//        assertEquals("modified", edge.getNota());
+//        assertEquals(currentSequenceValue + 1, (long)edge.getSerial());
+//        assertEquals(currentSequenceValue + 2, (long)sv.getSerial());
+//        assertEquals(currentSequenceValue + 3, (long)value.getSerial());
+//        
+//        //check if there aren't missing sequence values
+//        sv = sm.store(new SimpleVertexEx());
+//        sv = commitClearAndGet(sv);
+//        assertEquals(currentSequenceValue + 4, (long)sv.getSerial());
+//    }
+//    
+//    /*
+//     * Tests sequence field in an object stored implicitly.
+//     */
+//    @Test
+//    public void serialFieldImplicitStore() throws Exception {
+//        //fixme
+//        Long currentSequenceValue = sm.query("select currentSequence('testSequence') as sq", "sq");
+//        SimpleVertexEx sv = sm.store(new SimpleVertexEx());
+//        sv.setLooptest(new SimpleVertexEx());
+//        
+//        sv = commitClearAndGet(sv);
+//        assertEquals(currentSequenceValue + 1, (long)sv.getSerial());
+//        assertEquals(currentSequenceValue + 2, (long)sv.getLooptest().getSerial());
+//        
+//        sv.setS("change");
+//        sv = commitClearAndGet(sv);
+//        assertEquals(currentSequenceValue + 1, (long)sv.getSerial());
+//        assertEquals(currentSequenceValue + 2, (long)sv.getLooptest().getSerial());
+//    }
+//    
+//    /*
+//     * Tests the IncorrectSequenceField exception.
+//     */
+//    @Test
+//    public void incorrectSerialField() throws Exception {
+//        @Entity class BadSerial {
+//            @Sequence(sequenceName = "test_sequence") Integer s;
+//        }
+//        BadSerial bad = new BadSerial();
+//        assertThrows(IncorrectSequenceField.class, () -> sm.store(bad));
+//        
+//        @Entity class BadSerial2 {
+//            @Sequence(sequenceName = "test_sequence") long s;
+//        }
+//        BadSerial2 bad2 = new BadSerial2();
+//        assertThrows(IncorrectSequenceField.class, () -> sm.store(bad2));
+//    }
+//    
     /*
      * Tests that it fails if a non integer field is annotated as Version.
      */

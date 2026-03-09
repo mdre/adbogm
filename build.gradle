@@ -1,4 +1,4 @@
-// DSL Gradle 7.0
+// DSL Gradle 9.0
 plugins {
     id 'java-library'
     id 'maven-publish'
@@ -16,8 +16,8 @@ plugins {
 }
 
 //OrientDB version to use:
-//ext.arcadeDbVersion = '25.5.1'
-ext.arcadeDbVersion = '25.9.1-SNAPSHOT'
+ext.arcadeDbVersion = '26.3.1'
+//ext.arcadeDbVersion = '25.10.1-SNAPSHOT'
 
  
 // ejecutar: gradle idea 
@@ -39,6 +39,7 @@ def info() {
 }
 
 
+// DSL 7
 compileJava {
 //    options.compilerArgs << '-Xlint:deprecation'
 //    options.compilerArgs << '-Xlint:unchecked'
@@ -127,6 +128,7 @@ dependencies {
     
     api "com.arcadedb:arcadedb-engine:${arcadeDbVersion}"
     api "com.arcadedb:arcadedb-server:${arcadeDbVersion}"
+    api "com.arcadedb:arcadedb-grpc-client:${arcadeDbVersion}"
     //api "com.orientechnologies:orientdb-core:${orientDbVersion}:sources"
     
     testImplementation "junit:junit:[4,)"
@@ -199,7 +201,7 @@ task fatJar(type: Jar) {
     //        )
     //    }
     archiveBaseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
 
@@ -210,8 +212,9 @@ javadoc {
     }
 }
 
-signing {
-    if (project.gradle.startParameter.taskNames.join(",").toLowerCase().contains("release")) {
+// DSL 7
+//signing {
+//    if (project.gradle.startParameter.taskNames.join(",").toLowerCase().contains("release")) {
         //required { gradle.taskGraph.hasTask("uploadArchives")}
 
         //    ext."signing.keyId"= credentials.gpgKeyId
@@ -220,9 +223,9 @@ signing {
 
         //    println ext."signing.keyId"
 
-        sign(configurations.archives)
-    }
-}
+        //sign(configurations.archives)
+//    }
+//}
 
 
 nexusPublishing {
@@ -307,23 +310,22 @@ if (!hasProperty('mainClass')) {
 
 task runFile(dependsOn: 'classes',type:JavaExec) {
     if (project.hasProperty('mainClass')) {
-        main = mainClass
+        mainClass.set(project.mainClass)
         classpath = sourceSets.main.runtimeClasspath
         standardOutput = System.out
         errorOutput = System.err
     }
 }
 
-
-task debug(dependsOn: 'classes',type:JavaExec) {
-    if (project.hasProperty('mainClass')) {
-        main = mainClass
-        classpath = sourceSets.main.runtimeClasspath
-        standardOutput = System.out
-        errorOutput = System.err
-        debug true
-    }
-}
+//task debug(dependsOn: 'classes',type:JavaExec) {
+//    if (project.hasProperty('mainClass')) {
+//        main = mainClass
+//        classpath = sourceSets.main.runtimeClasspath
+//        standardOutput = System.out
+//        errorOutput = System.err
+//        debug true
+//    }
+//}
 
 // ************************************************************************************
 // Imprimir el listado de dependencias

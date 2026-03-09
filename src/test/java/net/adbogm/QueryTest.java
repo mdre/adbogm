@@ -29,7 +29,8 @@ public class QueryTest {
 
     @Before
     public void setUp() {
-        sm = new SessionManager("localhost", TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS, true)
+//        sm = new SessionManager(TestConfig.TESTSERVER,TestConfig.TESTGRPCDBPORT,TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS, true)
+        sm = new SessionManager(TestConfig.TESTSERVER,TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS)
 //                    .setClassLevelLog(Transaction.class, Level.INFO)
                 // .setClassLevelLog(ObjectProxy.class, Level.FINEST)
 //                .setClassLevelLog(ClassCache.class, Level.FINER)
@@ -143,7 +144,7 @@ public class QueryTest {
         sm.store(foo); //debe ir en los resultados
         sm.store(new Foo("excluded")); //no debe ir en los resultados
         sm.commit();
-        sm.getTransaction().clearCache();
+        sm.getCurrentTransaction().clearCache();
         
         List<Foo> res = sm.query(Foo.class, "where text = 'test query'");
         assertFalse(res.isEmpty());
@@ -161,7 +162,7 @@ public class QueryTest {
         foo = sm.store(foo);
         sm.commit();
         String rid = sm.getRID(foo);
-        sm.getTransaction().clearCache();
+        sm.getCurrentTransaction().clearCache();
         
         //tener en cuenta que un query tipado devuelve objetos que están en el 
         //caché del ogm, por lo que lo siguiente se cumple:

@@ -50,7 +50,8 @@ public class Auditor implements IAuditor {
         
         //verify and create the audit class in schema if necessary:
         if (this.transaction.getSessionManager().getConfig().isAuditorCreatesAuditSchema()) {
-            if (this.transaction.getDBType(ADBAUDITLOGVERTEXTYPE) == null) {
+            if (!this.transaction.getCurrentGraphDb().getSchema().existsType(ADBAUDITLOGVERTEXTYPE) ) {
+                LOGGER.log(Level.DEBUG, "creating {}",ADBAUDITLOGVERTEXTYPE);
                 this.transaction.getCurrentGraphDb().command("sqlscript", ADBAUDITLOGSCHEMA);
             }
         }
@@ -83,7 +84,7 @@ public class Auditor implements IAuditor {
     
     
     @Override
-    public void commit() {
+    public synchronized void commit() {
         // crear un UUDI para todo el log a comitear.
         String ovLogID = UUID.randomUUID().toString();
         RemoteDatabase odb = this.transaction.getCurrentGraphDb();

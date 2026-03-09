@@ -438,6 +438,9 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
 //                }
 //            }
             
+            // remover el caché los objetos borrados
+            this.dirtyDeleted.keySet().stream().forEach(k -> this.objectCache.remove(k));
+
             this.dirtyDeleted.clear();
             this.dirty.clear();
             this.storedObjects.clear();
@@ -477,7 +480,7 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
         this.dirty.clear();
         
         this.storedObjects.clear();
-//        this.newrids.clear();
+
         // clean the cache of objects to delete
         this.dirtyDeleted.clear();
         // clean the invalid entries of auditor cache
@@ -563,6 +566,8 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
             
             // fijar el RID temporal.
             v.save();
+            v.reload(); // forzar la recarga 
+            System.out.println("v.reload: "+v.toMap());
             LOGGER.log(Level.TRACE, "virtual RID: {}",v.getIdentity().toString());
             
             proxy = ObjectProxyFactory.create(o, v, this);
@@ -742,7 +747,7 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
                 this.processAfterDbCommit((IObjectProxy)proxy);
             }
             
-            // grabar! MMAPI no lo hace solo como tinker
+            // grabar!
             v.save();
 
         } catch (IllegalArgumentException ex) {
@@ -1360,7 +1365,7 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
                 // si fue recuperado del caché, determinar si se ha modificado.
                 // si no fue modificado, hacer un reload para actualizar con la última 
                 // versión de la base de datos.
-                if (!((IObjectProxy) ret).___isDirty()) {
+                if (ret != null && !((IObjectProxy) ret).___isDirty()) {
                     ((IObjectProxy) ret).___reload();
                 }
             }
@@ -1373,13 +1378,9 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
                 try {
                     v = this.arcadedbTransact.lookupByRID(new RID(arcadedbTransact, rid)).asVertex();
                 } catch (Exception e) {
-                    v = null;
-                }
-                
-                if (v == null) {
-                    //closeInternalTx();
                     throw new UnknownRID(rid, this);
                 }
+                
                 String javaClass = v.getType().getCustomValue("javaClass").toString();
                 if (javaClass == null) {
                     //closeInternalTx();
@@ -1455,7 +1456,7 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
             // si fue recuperado del caché, determinar si se ha modificado.
             // si no fue modificado, hacer un reload para actualizar con la última 
             // versión de la base de datos.
-            if (!((IObjectProxy) o).___isDirty()) {
+            if ((o!=null) && !((IObjectProxy) o).___isDirty()) {
                 ((IObjectProxy) o).___reload();
             }
         }

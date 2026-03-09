@@ -105,22 +105,24 @@ public class ObjectMapper {
     }
     
     /**
+     * 
      * Fills the sequence fields with the values of the corresponding sequences
      * from the DB.
      * 
      * @param o
      * @param t
-     * @param v If not null, sets also its corresponding property.
+     * @param v If not null
      */
-    //FIXME: no hay secuencias!
+    //FIXME: no hay secuencias! Usar ADBToolbox para crear secuencias. La librería creo y setea el valor directamente en el campo
+    // así que no es necesiario todo esto. Con un reload() se actualiza el valor. 
 //    public void fillSequenceFields(Object o, Transaction t, MutableVertex v) {
 //        ClassDef classdef = this.classCache.get(o.getClass());
+//        
 //        if (!classdef.sequenceFields.isEmpty()) {
-//            OSequenceLibrary seqLibrary = t.getCurrentGraphDb().getMetadata().getSequenceLibrary();
 //            classdef.sequenceFields.entrySet().forEach(e -> {
 //                Field f = classdef.fieldsObject.get(e.getKey());
 //                if (this.getFieldValue(o, f) == null) {
-//                    Long seqVal = seqLibrary.getSequence(e.getValue()).next();
+//                    
 //                    this.setFieldValue(o, f, seqVal);
 //                    if (v != null) v.setProperty(e.getKey(), seqVal);
 //                }
@@ -471,7 +473,7 @@ public class ObjectMapper {
     
     
     public void collectionToLazy(Object o, String field, Vertex v, Transaction t) {
-        LOGGER.log(Level.TRACE, "convertir colection a Lazy: {}", field);
+        LOGGER.log(Level.TRACE, "convertir colection a Lazy: {}.{}",o.getClass().getName(), field);
         ClassDef classdef;
         if (o instanceof IObjectProxy) {
             classdef = classCache.get(o.getClass().getSuperclass());
@@ -495,7 +497,7 @@ public class ObjectMapper {
      * @param t Vínculo a la transacción actual
      *
      */
-    private void collectionToLazy(Object o, String field, Class<?> fc, Vertex v, Transaction t) {
+    public void collectionToLazy(Object o, String field, Class<?> fc, Vertex v, Transaction t) {
         LOGGER.log(Level.TRACE, "***************************************************************");
         LOGGER.log(Level.TRACE, "convertir colection a Lazy: " + field + " class: " + fc.getName());
         LOGGER.log(Level.TRACE, "***************************************************************");

@@ -9,6 +9,8 @@ import java.util.Map;
 
 import com.arcadedb.query.sql.executor.ResultSet;
 import com.arcadedb.remote.RemoteDatabase;
+import com.arcadedb.remote.grpc.RemoteGrpcDatabase;
+import com.arcadedb.remote.grpc.RemoteGrpcServer;
 import com.arcadedb.schema.DocumentType;
 
 import net.adbogm.audit.Auditor;
@@ -45,11 +47,13 @@ public class SessionManager implements IActions.IStore, IActions.IGet {
         Configurator.setLevel(SessionManager.class.getName(), LogginProperties.SessionManager);
     }
     private String serverName;
+    private int grpcPort;
     private int port;
     private String database;
     private String user;
     private String passwd;
     
+    private RemoteGrpcServer grpcServer;
     
     // uso un solo objectMapper para ahorar memoria. Estas instancia se comparte entre las transacciones.
     private ObjectMapper objectMapper;
@@ -69,26 +73,58 @@ public class SessionManager implements IActions.IStore, IActions.IGet {
     //configs
     private final Config config = new Config();
 
-    
+    /**
+     * Init a session manager over Http conection.
+     * @param serverName
+     * @param port
+     * @param database
+     * @param user
+     * @param passwd 
+     */
     public SessionManager(String serverName, int port, String database, String user, String passwd) {
-        this.init(serverName, port, database, user, passwd, true);
+        this.init(serverName, -1, port, database, user, passwd, true);
+    }
+    
+    /**
+     * Init a session manager over GRPC conection.
+     * @param serverName
+     * @param grpcPort
+     * @param port
+     * @param database
+     * @param user
+     * @param passwd 
+     */
+    public SessionManager(String serverName, int grpcPort, int port, String database, String user, String passwd) {
+        this.init(serverName, grpcPort, port, database, user, passwd, true);
     }
 
-    public SessionManager(String serverName, int port, String database, String user, String passwd, boolean loadAgent) {
-        this.init(serverName, port, database, user, passwd, loadAgent);
+    /**
+     * Init a session manager over GRPC conection.
+     * @param serverName
+     * @param grpcPort
+     * @param port
+     * @param database
+     * @param user
+     * @param passwd 
+     */
+    public SessionManager(String serverName, int grpcPort, int port, String database, String user, String passwd, boolean loadAgent) {
+        this.init(serverName, grpcPort, port, database, user, passwd, loadAgent);
     }
     
-    private void init(String serverName, int port, String database, String user, String passwd, boolean loadAgent) {
+    private void init(String serverName, int grpcPort, int port, String database, String user, String passwd, boolean loadAgent) {
         LOGGER.log(Level.INFO, "ADBOGM Session Manager initialization...");
 
         this.serverName = serverName;
+        this.grpcPort = grpcPort;
         this.port = port;
         this.database = database;
         this.user = user;
         this.passwd = passwd;
         this.objectMapper = new ObjectMapper();
         this.setActivationStrategy(ActivationStrategy.CLASS_INSTRUMENTATION, loadAgent);
+     
         
+        this.grpcServer = grpcPort>0?new RemoteGrpcServer(this.serverName, this.grpcPort, this.user, this.passwd, true, List.of()):null;
 //        try {
 //            TransparentDirtyDetectorAgent.initialize();
 //            TransparentDirtyDetectorAgent.get()
@@ -144,7 +180,13 @@ public class SessionManager implements IActions.IStore, IActions.IGet {
 //     * @return 
 //     */
     public RemoteDatabase getDBTx() {
-        RemoteDatabase dbTx = new RemoteDatabase(serverName, port, database, user, passwd);
+        RemoteDatabase dbTx = null;
+        if (grpcPort>0) {
+            RemoteGrpcDatabase gdb= new RemoteGrpcDatabase(this.grpcServer, serverName, grpcPort, port, database, user, passwd);
+             dbTx = (RemoteDatabase)gdb;
+        } else {
+            dbTx = new RemoteDatabase(serverName, port, database, user, passwd);
+        }
         dbTx.setTransactionIsolationLevel(Database.TRANSACTION_ISOLATION_LEVEL.REPEATABLE_READ);
         
         return dbTx;
@@ -156,7 +198,7 @@ public class SessionManager implements IActions.IStore, IActions.IGet {
     public void begin() {
         if (this.publicTransaction == null) {
             // si no hay una transacción creada, abrir una...
-            publicTransaction = getTransaction();
+            publicTransaction = getNewTransaction();
         } else {
             this.publicTransaction.begin();
         }
@@ -169,7 +211,7 @@ public class SessionManager implements IActions.IStore, IActions.IGet {
      * 
      * @return un objeto Transaction para operar.
      */    
-    public Transaction getTransaction() {
+    public Transaction getNewTransaction() {
         Transaction t = new Transaction(this);
         openTransactionsList.add(new WeakReference<>(t));
         return t;

@@ -28,7 +28,8 @@ public class SecurityObjectsTest {
 
     @Before
     public void setUp() {
-        sm = new SessionManager("localhost", TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS, true)
+//        sm = new SessionManager(TestConfig.TESTSERVER, TestConfig.TESTGRPCDBPORT,TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS, true)
+        sm = new SessionManager(TestConfig.TESTSERVER, TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS)
 //                    .setClassLevelLog(Transaction.class, Level.INFO)
                     //.setClassLevelLog(TransparentDirtyDetectorInstrumentator.class, Level.INFO)
                     //.setClassLevelLog(InstrumentableClassDetector.class, Level.INFO)

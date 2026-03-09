@@ -29,7 +29,7 @@ public class SimpleVertex {
     private float f;
     private boolean b;
     private LocalDateTime fecha;
-    @Sequence(sequenceName = "test_sequence") private final Long serial = null;
+    @Sequence(sequenceName = "testSequence") private final Long serial = null;
     
     public LocalDateTime getFecha() {
         return fecha;
