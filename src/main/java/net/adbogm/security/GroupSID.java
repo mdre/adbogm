@@ -4,14 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import net.adbogm.LogginProperties;
 import net.adbogm.annotations.Entity;
 import net.adbogm.annotations.Indexed;
 import net.adbogm.annotations.Indirect;
 import net.adbogm.exceptions.CircularReferenceException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  *
@@ -21,9 +19,9 @@ import org.apache.logging.log4j.core.config.Configurator;
 public final class GroupSID implements ISID {
     private final static Logger LOGGER = LogManager.getLogger(GroupSID.class.getName());
 
-    static {
-        Configurator.setLevel(GroupSID.class.getName(), LogginProperties.GroupSID);
-    }
+//    static {
+//        Configurator.setLevel(GroupSID.class.getName(), LogginProperties.GroupSID);
+//    }
     @Indexed(type = Indexed.IndexType.UNIQUE)
     private String name = "";
     @Indexed(type = Indexed.IndexType.UNIQUE)

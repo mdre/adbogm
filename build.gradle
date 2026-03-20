@@ -1,35 +1,44 @@
-// DSL Gradle 9.0
+// ============================================================
+// build.gradle — compatible con el NUEVO Maven Central Portal
+// Plugin: com.vanniktech.maven.publish v0.36.0
+// OSSRH fue dado de baja el 30/06/2025. Este archivo usa
+// la nueva API de central.sonatype.com directamente.
+// ============================================================
+
 plugins {
     id 'java-library'
-    id 'maven-publish'
-    id 'signing'
 
-    // https://plugins.gradle.org/plugin/net.researchgate.release
-    // id 'net.researchgate.release' version '2.8.1'
+    // Plugin recomendado para publicar en el nuevo Maven Central Portal
+    // Reemplaza a: io.github.gradle-nexus.publish-plugin + maven-publish + signing
+    // https://vanniktech.github.io/gradle-maven-publish-plugin/central/
+    id 'com.vanniktech.maven.publish' version '0.36.0'
+
+    // Credenciales seguras (sin cambios)
     // https://plugins.gradle.org/plugin/nu.studer.credentials
     id 'nu.studer.credentials' version '3.0'
-    // https://plugins.gradle.org/plugin/io.codearte.nexus-staging
-    // id 'io.codearte.nexus-staging' version '0.30.0'
-
-    //https://github.com/gradle-nexus/publish-plugin/
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
-//OrientDB version to use:
+// ============================================================
+// Versión de ArcadeDB
+// ============================================================
 ext.arcadeDbVersion = '26.3.1'
-//ext.arcadeDbVersion = '25.10.1-SNAPSHOT'
+// ext.arcadeDbVersion = '25.10.1-SNAPSHOT'
 
- 
-// ejecutar: gradle idea 
-// para que inicialize el proyecto y baje los javadocs.
+
+// ============================================================
+// IDEA: ejecutar "gradle idea" para bajar javadocs
+// ============================================================
 apply plugin: 'idea'
-idea{
+idea {
     module {
-        downloadJavadoc=true
+        downloadJavadoc = true
     }
 }
 
 
+// ============================================================
+// Información del build
+// ============================================================
 def info() {
     println "***************************************************************"
     println " SYSTEM: " + name
@@ -39,54 +48,72 @@ def info() {
 }
 
 
-// DSL 7
+// ============================================================
+// Compilación Java 21
+// ============================================================
 compileJava {
-//    options.compilerArgs << '-Xlint:deprecation'
-//    options.compilerArgs << '-Xlint:unchecked'
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
 
-// Para hace el deploy en Sonatype
-// 1. Hacer el commit a github desde NB
-// 2. Ejecutar: gradle release
-// 3. ir a: https://oss.sonatype.org/#stagingRepositories
-//    buscar el repositorio y hacer clic en "Close"
-// 4. Una vez cerrado hacer click en "Release"
 
+// ============================================================
+// Credenciales seguras con nu.studer.credentials
+//
+// Guardar credenciales (ejecutar UNA vez, no en el build):
+//   gradle addCredentials -PcredentialsKey=mavenCentralUsername -PcredentialsValue=TU_TOKEN_USERNAME
+//   gradle addCredentials -PcredentialsKey=mavenCentralPassword -PcredentialsValue=TU_TOKEN_PASSWORD
+//   gradle addCredentials -PcredentialsKey=signingKeyId        -PcredentialsValue=XXXXXXXX
+//   gradle addCredentials -PcredentialsKey=signingPassword     -PcredentialsValue=TU_PASSPHRASE
+//   gradle addCredentials -PcredentialsKey=signingSecretKeyRingFile -PcredentialsValue=/ruta/.gnupg/secring.gpg
+//
+// ALTERNATIVA — poner en ~/.gradle/gradle.properties (fuera del repo):
+//   mavenCentralUsername=token_username
+//   mavenCentralPassword=token_password
+//   signing.keyId=XXXXXXXX
+//   signing.password=passphrase
+//   signing.secretKeyRingFile=/home/user/.gnupg/secring.gpg
+//
+// El token username/password se genera en:
+//   https://central.sonatype.com → Account → Generate User Token
+// ============================================================
 
-//Para guardar el usuario y contraseña en forma segura hacer:
-//gradle addCredentials -PcredentialsKey=nexusUser -PcredentialsValue=XXXXX
-//gradle addCredentials -PcredentialsKey=nexusPassword -PcredentialsValue=YYYYY
-//o para hacerlo más seguro:
-//gradle addCredentials -PcredentialsKey=nexusUser -PcredentialsValue=XXXXX -PcredentialsPassphrase=zzzzzzzz
-//gradle addCredentials -PcredentialsKey=nexusPassword -PcredentialsValue=YYYYY -PcredentialsPassphrase=zzzzzzzz
-//def nexusUser = credentials.nexusUser
-//def nexusPassword = credentials.nexusPassword
-def sonatypeUser = credentials.forKey("sonatypeUser")
-def sonatypePassword = credentials.forKey("sonatypePassword")
+// Inyectamos las credenciales desde nu.studer.credentials al sistema de propiedades
+// para que el plugin de vanniktech las encuentre automáticamente.
+// Si ya están en ~/.gradle/gradle.properties, estas líneas son opcionales pero no hacen daño.
+if (credentials.forKey("mavenCentralUsername")) {
+    ext["mavenCentralUsername"] = credentials.forKey("mavenCentralUsername")
+}
+if (credentials.forKey("mavenCentralPassword")) {
+    ext["mavenCentralPassword"] = credentials.forKey("mavenCentralPassword")
+}
+if (credentials.forKey("signingKeyId")) {
+    ext["signing.keyId"] = credentials.forKey("signingKeyId")
+}
+if (credentials.forKey("signingPassword")) {
+    ext["signing.password"] = credentials.forKey("signingPassword")
+}
+if (credentials.forKey("signingSecretKeyRingFile")) {
+    ext["signing.secretKeyRingFile"] = credentials.forKey("signingSecretKeyRingFile")
+}
 
-
-// incrementar automáticamente el buildNumber
+// ============================================================
+// Auto-incremento del build number
+// ============================================================
 task autoBuildNumber {
     doFirst {
         File propertiesFile = new File('gradle.properties')
         def lines = propertiesFile.readLines()
-
         PrintWriter printWriter = new PrintWriter(propertiesFile)
-        
-        lines.each {String line ->
-            if (line.startsWith("version") ){
+        lines.each { String line ->
+            if (line.startsWith("version")) {
                 String versionNumber = line.tokenize("=")[1]
                 String[] versionParts = versionNumber.tokenize(".")
-                // recalcular el build 
-                versionNumber = versionParts[0]+\
-                                '.'+versionParts[1]+\
-                                '.'+versionParts[2]+
-                                '.'+( versionParts.length==4 ? (versionParts[3].toInteger()+1).toString():"1")
-                
-                line = "version="+versionNumber
-//                println line
+                versionNumber = versionParts[0] + \
+                                '.' + versionParts[1] + \
+                                '.' + versionParts[2] + \
+                                '.' + (versionParts.length == 4 ? (versionParts[3].toInteger() + 1).toString() : "1")
+                line = "version=" + versionNumber
             }
             printWriter.println(line)
         }
@@ -94,51 +121,174 @@ task autoBuildNumber {
     }
 }
 
+// "sabn" = Skip Auto Build Number
+// Usar cuando se publica: gradle publishToMavenCentral sabn
+task sabn {}
 
-
-
-// agregar la dependencia solo si no se trata de un release
-if (! (project.gradle.startParameter.taskNames.join(",").toLowerCase().contains("release")
-       || project.gradle.startParameter.taskNames.join(",").toLowerCase().contains("sabn")) 
-   ) {
-    build.configure{dependsOn autoBuildNumber} 
+// Solo auto-incrementar si NO es un release ni sabn
+if (!(project.gradle.startParameter.taskNames.join(",").toLowerCase().contains("release")
+        || project.gradle.startParameter.taskNames.join(",").toLowerCase().contains("sabn"))) {
+    build.configure { dependsOn autoBuildNumber }
 }
 
-// desactivo la generación de javadoc en los proyectos que tengan la tarea
-javadoc.enabled = true
 
+// ============================================================
+// Repositorios de resolución de dependencias
+// ============================================================
 repositories {
-    //    maven {
-    //        url "$sonatypeURLRelease"
-    //            
-    //        credentials {
-    //            username = "$sonatypeUser"
-    //            password = "$sonatypePassword"
-    //        }
-    //    }
     mavenLocal()
     mavenCentral()
 }
-    
 
+
+// ============================================================
+// Dependencias
+//
+// NOTA sobre dependencias dinámicas (1.+, 0.+, [4,)):
+//   Maven no acepta estos rangos en el POM publicado.
+//   El bloque versionMapping dentro de mavenPublishing (más abajo)
+//   resuelve automáticamente las versiones dinámicas a versiones
+//   fijas concretas en el POM generado para Maven Central.
+// ============================================================
 dependencies {
     api "com.github.mdre:EasyProxy:1.+"
 
     implementation "com.github.mdre:tdd-agent:0.+"
-    
+
     api "com.arcadedb:arcadedb-engine:${arcadeDbVersion}"
     api "com.arcadedb:arcadedb-server:${arcadeDbVersion}"
     api "com.arcadedb:arcadedb-grpc-client:${arcadeDbVersion}"
-    //api "com.orientechnologies:orientdb-core:${orientDbVersion}:sources"
-    
+
     testImplementation "junit:junit:[4,)"
     testImplementation "org.easymock:easymock:4.0.2"
-    
+
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.23.1'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.23.1'
 }
 
-//task to find the path of the ogm agent automatically:
+// ============================================================
+// Publicación en el NUEVO Maven Central Portal
+//
+// Comandos:
+//   - Para publicar (requiere aprobación manual en portal):
+//       gradle publishToMavenCentral sabn
+//
+//   - Para publicar y liberar automáticamente:
+//       gradle publishAndReleaseToMavenCentral sabn
+//
+//   - Para subir un SNAPSHOT:
+//       gradle publishToMavenCentral
+//       (la versión en gradle.properties debe terminar en -SNAPSHOT)
+//
+// El portal queda en: https://central.sonatype.com/publishing
+// ============================================================
+mavenPublishing {
+
+    // Publicar en el nuevo Central Portal (sin SonatypeHost = usa portal nuevo)
+    // automaticRelease = true  → libera automáticamente sin intervención manual
+    // automaticRelease = false → queda en estado "Validated", se libera manualmente desde el portal
+    publishToMavenCentral()
+
+    // Firma requerida por Maven Central
+    signAllPublications()
+
+    // Coordenadas Maven — si no se especifican, toma group/name/version del proyecto
+    // coordinates("com.github.mdre", "adbogm", project.version.toString())
+
+    // Resolución de versiones dinámicas → versiones fijas en el POM publicado
+    // Esto convierte "1.+", "0.+", "[4,)" a la versión concreta resuelta por Gradle
+    configure(new com.vanniktech.maven.publish.JavaLibrary(
+            new com.vanniktech.maven.publish.JavadocJar.Javadoc(),
+            true  // incluir sources JAR
+    ))
+
+    pom {
+        name = project.name
+        description = project.findProperty('description') ?: 'ArcadeDB OGM - Object Graph Mapper for ArcadeDB'
+        inceptionYear = "2021"
+        url = 'https://github.com/mdre/adbogm'
+
+        licenses {
+            license {
+                name = 'The Apache License, Version 2.0'
+                url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                distribution = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
+        }
+
+        developers {
+            developer {
+                id = 'mdre'
+                name = 'Marcelo D. RE'
+                email = 'marcelo.re@gmail.com'
+                url = 'https://github.com/mdre'
+            }
+        }
+
+        scm {
+            url = 'https://github.com/mdre/adbogm'
+            connection = 'scm:git:git://github.com/mdre/adbogm.git'
+            developerConnection = 'scm:git:ssh://git@github.com/mdre/adbogm.git'
+        }
+    }
+}
+
+
+// ============================================================
+// Resolver dependencias dinámicas (1.+, 0.+, [4,)) a versiones
+// fijas en el POM publicado.
+//
+// Maven Central rechaza POMs con rangos de versión. Este hook
+// post-procesa el POM generado reemplazando versiones dinámicas
+// por la versión concreta que Gradle resolvió en el classpath.
+// ============================================================
+afterEvaluate {
+    tasks.withType(GenerateMavenPom).configureEach { pomTask ->
+        pomTask.doLast {
+            // Construir mapa  "group:artifact" → "versión resuelta"
+            def resolvedVersions = [:]
+            configurations.runtimeClasspath.resolvedConfiguration
+                    .resolvedArtifacts
+                    .each { artifact ->
+                        def id = artifact.moduleVersion.id
+                        resolvedVersions["${id.group}:${id.name}"] = id.version
+                    }
+ 
+            // Leer el POM generado y reemplazar versiones dinámicas
+            def pomFile = pomTask.destination
+            def pomContent = pomFile.text
+ 
+            resolvedVersions.each { coords, resolvedVersion ->
+                def parts = coords.split(":")
+                def grp = parts[0]
+                def art = parts[1]
+                // Regex: para ese groupId+artifactId, sustituir el contenido de <version>
+                pomContent = pomContent.replaceAll(
+                        "(<groupId>${grp}</groupId>\\s*<artifactId>${art}</artifactId>\\s*<version>)[^<]*(</version>)",
+                        "\$1${resolvedVersion}\$2"
+                )
+            }
+            pomFile.text = pomContent
+        }
+    }
+}
+
+
+// ============================================================
+// Javadoc
+// ============================================================
+javadoc.enabled = true
+
+javadoc {
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+}
+
+
+// ============================================================
+// Tests
+// ============================================================
 task findAgentPath {
     configurations.runtimeClasspath.files.each {
         if (it.getName().contains('tdd-agent')) {
@@ -154,161 +304,29 @@ test {
     jvmArgs += "-javaagent:${project.tddAgentPath}=net.adbogm.annotations.Entity"
     outputs.upToDateWhen { false }
     testLogging {
-        // Make sure output from
-        // standard out or error is shown
-        // in Gradle output.
         showStandardStreams = true
-        // Or we use events method:
-        // events 'standard_out', 'standard_error'
- 
-        // Or set property events:
-        // events = ['standard_out', 'standard_error']
- 
-        // Instead of string values we can
-        // use enum values:
-        // events org.gradle.api.tasks.testing.logging.TestLogEvent.STANDARD_OUT,
-        //        org.gradle.api.tasks.testing.logging.TestLogEvent.STANDARD_ERROR,
     }
 }
 
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
 
-//jar {
-//    manifest {
-//        attributes(
-//      'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
-//      'Premain-Class':'net.odbogm.agent.TransparentDirtyDetectorAgent',
-//      'Agent-Class':'net.odbogm.agent.TransparentDirtyDetectorAgent',
-//      'Can-Redefine-Classes':true,
-//      'Can-Retransform-Classes':true
-//        )
-//    }
-//}
-
-
-//create a single Jar with all dependencies
+// ============================================================
+// Fat JAR (todas las dependencias en un solo jar)
+// ============================================================
 task fatJar(type: Jar) {
-    //    manifest {
-    //        attributes(
-    //      'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
-    //      'Premain-Class':'net.odbogm.agent.TransparentDirtyDetectorAgent',
-    //      'Agent-Class':'net.odbogm.agent.TransparentDirtyDetectorAgent',
-    //      'Can-Redefine-Classes':true,
-    //      'Can-Retransform-Classes':true
-    //        )
-    //    }
     archiveBaseName = project.name + '-all'
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
 
 
-javadoc {
-    if(JavaVersion.current().isJava9Compatible()) {
-        options.addBooleanOption('html5', true)
-    }
-}
-
-// DSL 7
-//signing {
-//    if (project.gradle.startParameter.taskNames.join(",").toLowerCase().contains("release")) {
-        //required { gradle.taskGraph.hasTask("uploadArchives")}
-
-        //    ext."signing.keyId"= credentials.gpgKeyId
-        //    ext."signing.password"= credentials.gpgKeyPassword
-        //    ext."signing.secretKeyRingFile" = credentials.gpgKeyRingFile                
-
-        //    println ext."signing.keyId"
-
-        //sign(configurations.archives)
-//    }
-//}
-
-
-nexusPublishing {
-    repositories {
-        //sonatype()
-        sonatype {
-            username = sonatypeUser
-            password = sonatypePassword
-        }
-    }
-}
-
-
-// para publicar en sonatype:
-// gradle publishToSonatype closeAndReleaseSonatypeStagingRepository sabn
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            //artifactId = 'my-library'
-            from components.java
-        
-            // versionMapping {
-            //     usage('java-api') {
-            //         fromResolutionOf('runtimeClasspath')
-            //     }
-            //     usage('java-runtime') {
-            //         fromResolutionResult()
-            //     }
-            // }
-            pom {
-                name = "$artifactId"
-                description  = "$description"
-                url = 'https://github.com/mdre/adbogm'
-                
-                // packaging = 'jar'
-                // optionally artifactId can be defined here 
-
-                // properties = [
-                //     myProp: "value",
-                //     "prop.with.dots": "anotherValue"
-                // ]
-                scm {
-                    connection = 'scm:git:git://github.com/mdre/adbogm.git'
-                    developerConnection = 'scm:git:ssh://github.com/mdre/adbogm.git'
-                    url = 'https://github.com/mdre/adbogm'
-                }
-
-                licenses {
-                    license {
-                        name = 'The Apache License, Version 2.0'
-                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
-                developers {
-                    developer {
-                        id = 'mdre'
-                        name = 'Marcelo D. RE'
-                        email = 'marcelo.re@gmail.com'
-                    }
-                }
-            }
-        }
-    }
-
-}
-
-signing {
-    sign publishing.publications.mavenJava
-}
-
-// NetBeans will automatically add "run" and "debug" tasks relying on the
-// "mainClass" property. You may however define the property prior executing
-// tasks by passing a "-PmainClass=<QUALIFIED_CLASS_NAME>" argument.
-//
-// Note however, that you may define your own "run" and "debug" task if you
-// prefer. In this case NetBeans will not add these tasks but you may rely on
-// your own implementation.
+// ============================================================
+// Tarea de utilidad: ejecutar clase principal
+// ============================================================
 if (!hasProperty('mainClass')) {
     ext.mainClass = ''
 }
 
-
-task runFile(dependsOn: 'classes',type:JavaExec) {
+task runFile(dependsOn: 'classes', type: JavaExec) {
     if (project.hasProperty('mainClass')) {
         mainClass.set(project.mainClass)
         classpath = sourceSets.main.runtimeClasspath
@@ -317,24 +335,13 @@ task runFile(dependsOn: 'classes',type:JavaExec) {
     }
 }
 
-//task debug(dependsOn: 'classes',type:JavaExec) {
-//    if (project.hasProperty('mainClass')) {
-//        main = mainClass
-//        classpath = sourceSets.main.runtimeClasspath
-//        standardOutput = System.out
-//        errorOutput = System.err
-//        debug true
-//    }
-//}
 
-// ************************************************************************************
-// Imprimir el listado de dependencias
-// ************************************************************************************
-task printDep (){
+// ============================================================
+// Tarea de utilidad: listar dependencias de primer nivel
+// ============================================================
+task printDep() {
     println("Dependencies: ")
     configurations.compileClasspath.resolvedConfiguration.firstLevelModuleDependencies.each { dep ->
         println dep
     }
 }
-
-

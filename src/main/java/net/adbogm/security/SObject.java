@@ -2,13 +2,11 @@ package net.adbogm.security;
 
 import java.util.HashMap;
 import java.util.Map;
-import net.adbogm.LogginProperties;
 import net.adbogm.annotations.Entity;
 import net.adbogm.annotations.Ignore;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 @Entity
 public abstract class SObject {
@@ -19,9 +17,9 @@ public abstract class SObject {
 
     private final static Logger LOGGER = LogManager.getLogger(SObject.class.getName());
 
-    static {
-        Configurator.setLevel(SObject.class.getName(), LogginProperties.SObject);
-    }
+//    static {
+//        Configurator.setLevel(SObject.class.getName(), LogginProperties.SObject);
+//    }
     private ISID __owner;
     
     /** Access Control List */

@@ -9,7 +9,7 @@ package net.adbogm.cache;
  *
  * @author Marcelo D. Ré {@literal <marcelo.re@gmail.com>}
  */
-public interface Cache {
+public interface ICache {
     
     void add(String key, Object value);
  

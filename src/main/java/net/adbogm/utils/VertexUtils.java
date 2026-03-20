@@ -9,11 +9,9 @@ import com.arcadedb.database.Record;
 import com.arcadedb.graph.Edge;
 import com.arcadedb.graph.Vertex;
 import java.util.Map;
-import net.adbogm.LogginProperties;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  *
@@ -23,9 +21,9 @@ public class VertexUtils {
 
     private final static Logger LOGGER = LogManager.getLogger(VertexUtils.class.getName());
 
-    static {
-        Configurator.setLevel(VertexUtils.class.getName(), LogginProperties.VertexUtils);
-    }
+//    static {
+//        Configurator.setLevel(VertexUtils.class.getName(), LogginProperties.VertexUtils);
+//    }
 
     /**
      * Check if two vertex are conected

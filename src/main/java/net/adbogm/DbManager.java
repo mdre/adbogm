@@ -34,7 +34,6 @@ import net.adbogm.security.UserSID;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  * DbManager se encarga de analizar todas las clases que se encuentren en los
@@ -58,9 +57,9 @@ public class DbManager {
     
     private final static Logger LOGGER = LogManager.getLogger(DbManager.class.getName());
 
-    static {
-        Configurator.setLevel(DbManager.class.getName(), LogginProperties.DbManager);
-    }
+//    static {
+//        Configurator.setLevel(DbManager.class.getName(), LogginProperties.DbManager);
+//    }
     private RemoteDatabase arcadeDB;
 
     private static final String BAD_PACKAGE_ERROR = "Unable to get resources from path '%s'. Are you sure the package '%s' exists?";

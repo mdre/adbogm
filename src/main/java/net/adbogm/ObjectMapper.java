@@ -28,7 +28,6 @@ import net.adbogm.proxy.ObjectProxyFactory;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  *
@@ -38,9 +37,9 @@ public class ObjectMapper {
 
     private final static Logger LOGGER = LogManager.getLogger(ObjectMapper.class.getName());
 
-    static {
-        Configurator.setLevel(ObjectMapper.class.getName(), LogginProperties.ObjectMapper);
-    }
+//    static {
+//        Configurator.setLevel(ObjectMapper.class.getName(), LogginProperties.ObjectMapper);
+//    }
     private final ClassCache classCache;
 
     

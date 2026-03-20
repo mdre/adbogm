@@ -11,12 +11,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
-import net.adbogm.LogginProperties;
 import net.adbogm.utils.ThreadHelper;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  *
@@ -27,9 +25,9 @@ public class ArrayListEmbeddedProxy extends ArrayList implements IEmbeddedCalls 
     private static final long serialVersionUID = 3136116168236143774L;
     private final static Logger LOGGER = LogManager.getLogger(ArrayListEmbeddedProxy.class.getName());
 
-    static {
-        Configurator.setLevel(ArrayListEmbeddedProxy.class.getName(), LogginProperties.ArrayListEmbeddedProxy);
-    }
+//    static {
+//        Configurator.setLevel(ArrayListEmbeddedProxy.class.getName(), LogginProperties.ArrayListEmbeddedProxy);
+//    }
     // referencia debil al objeto padre. Se usa para notificar al padre que la colección ha cambiado.
     private WeakReference<IObjectProxy> parent;
     

@@ -14,13 +14,11 @@ import com.arcadedb.graph.Edge;
 import com.arcadedb.graph.Vertex;
 import com.arcadedb.graph.Vertex.DIRECTION;
 
-import net.adbogm.LogginProperties;
 import net.adbogm.Primitives;
 import net.adbogm.Transaction;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  *
@@ -30,9 +28,9 @@ public class HashMapLazyProxy extends HashMap<Object, Object> implements ILazyMa
 
     private final static Logger LOGGER = LogManager.getLogger(HashMapLazyProxy.class.getName());
 
-    static {
-        Configurator.setLevel(HashMapLazyProxy.class.getName(), LogginProperties.HashMapLazyProxy);
-    }
+//    static {
+//        Configurator.setLevel(HashMapLazyProxy.class.getName(), LogginProperties.HashMapLazyProxy);
+//    }
     private boolean dirty = false;
 
     private boolean lazyLoad = true;

@@ -6,11 +6,9 @@
 
 package net.adbogm.security;
 
-import net.adbogm.LogginProperties;
 import net.adbogm.annotations.Entity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  *
@@ -21,9 +19,9 @@ public class AccessRight {
 
     private final static Logger LOGGER = LogManager.getLogger(AccessRight.class.getName());
 
-    static {
-        Configurator.setLevel(AccessRight.class.getName(), LogginProperties.AccessRight);
-    }
+//    static {
+//        Configurator.setLevel(AccessRight.class.getName(), LogginProperties.AccessRight);
+//    }
     /**
      * Estados internos del objeto:
      * 0: sin acceso

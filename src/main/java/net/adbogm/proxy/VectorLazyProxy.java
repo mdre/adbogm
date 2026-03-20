@@ -19,12 +19,10 @@ import java.util.stream.Stream;
 import com.arcadedb.graph.Vertex;
 import com.arcadedb.graph.Vertex.DIRECTION;
 
-import net.adbogm.LogginProperties;
 import net.adbogm.Transaction;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  *
@@ -34,9 +32,9 @@ public class VectorLazyProxy extends Vector implements ILazyCollectionCalls {
 
     private final static Logger LOGGER = LogManager.getLogger(VectorLazyProxy.class.getName());
 
-    static {
-        Configurator.setLevel(VectorLazyProxy.class.getName(), LogginProperties.VectorLazyProxy);
-    }
+//    static {
+//        Configurator.setLevel(VectorLazyProxy.class.getName(), LogginProperties.VectorLazyProxy);
+//    }
     private boolean dirty = false;
     
     private boolean lazyLoad = true;

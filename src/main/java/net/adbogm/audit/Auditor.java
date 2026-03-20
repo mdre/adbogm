@@ -5,7 +5,6 @@ import com.arcadedb.remote.RemoteDatabase;
 import com.arcadedb.remote.RemoteMutableVertex;
 import java.util.ArrayList;
 import java.util.UUID;
-import net.adbogm.LogginProperties;
 import net.adbogm.Transaction;
 import net.adbogm.annotations.Audit;
 import net.adbogm.proxy.IObjectProxy;
@@ -13,7 +12,6 @@ import net.adbogm.utils.DateHelper;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  *
@@ -23,9 +21,9 @@ public class Auditor implements IAuditor {
     
     private final static Logger LOGGER = LogManager.getLogger(Auditor.class.getName());
 
-    static {
-        Configurator.setLevel(Auditor.class.getName(), LogginProperties.Auditor);
-    }
+//    static {
+//        Configurator.setLevel(Auditor.class.getName(), LogginProperties.Auditor);
+//    }
     private final static String ADBAUDITLOGVERTEXTYPE = "OGMAuditLog";
     private final static String ADBAUDITLOGSCHEMA = 
             """

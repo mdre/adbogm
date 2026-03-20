@@ -7,10 +7,8 @@ package net.adbogm.utils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import net.adbogm.LogginProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  *
@@ -20,9 +18,9 @@ public class ReflectionUtils {
 
     private final static Logger LOGGER = LogManager.getLogger(ReflectionUtils.class.getName());
 
-    static {
-        Configurator.setLevel(ReflectionUtils.class.getName(), LogginProperties.ReflectionUtils);
-    }
+//    static {
+//        Configurator.setLevel(ReflectionUtils.class.getName(), LogginProperties.ReflectionUtils);
+//    }
     
     public static Field findField(Class<?> clazz, String fieldName) throws NoSuchFieldException {
         Class<?> current = clazz;

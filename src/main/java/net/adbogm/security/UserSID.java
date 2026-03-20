@@ -4,21 +4,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import net.adbogm.LogginProperties;
 import net.adbogm.annotations.Entity;
 import net.adbogm.annotations.Indexed;
 import net.adbogm.annotations.Indirect;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 @Entity
 public final class UserSID implements ISID, ISecurityCredentials {
     private final static Logger LOGGER = LogManager.getLogger(UserSID.class.getName());
 
-    static {
-        Configurator.setLevel(UserSID.class.getName(), LogginProperties.UserSID);
-    }
+//    static {
+//        Configurator.setLevel(UserSID.class.getName(), LogginProperties.UserSID);
+//    }
     
     @Indexed(type = Indexed.IndexType.UNIQUE)
     private String name = "";

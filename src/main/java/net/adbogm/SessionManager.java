@@ -43,9 +43,9 @@ public class SessionManager implements IActions.IStore, IActions.IGet {
 
     private final static Logger LOGGER = LogManager.getLogger(SessionManager.class.getName());
 
-    static {
-        Configurator.setLevel(SessionManager.class.getName(), LogginProperties.SessionManager);
-    }
+//    static {
+//        Configurator.setLevel(SessionManager.class.getName(), LogginProperties.SessionManager);
+//    }
     private String serverName;
     private int grpcPort;
     private int port;

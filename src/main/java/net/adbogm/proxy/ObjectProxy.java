@@ -21,7 +21,6 @@ import com.arcadedb.database.Document;
 import com.arcadedb.graph.Edge;
 import com.arcadedb.graph.Vertex;
 import java.util.Set;
-import net.adbogm.LogginProperties;
 import net.adbogm.ObjectMapper;
 import net.adbogm.ObjectStruct;
 import net.adbogm.SessionManager;
@@ -43,7 +42,6 @@ import net.dirtydetector.agent.ITransparentDirtyDetector;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  *
@@ -53,9 +51,9 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
 
     private final static Logger LOGGER = LogManager.getLogger(ObjectProxy.class.getName());
 
-    static {
-        Configurator.setLevel(ObjectProxy.class.getName(), LogginProperties.ObjectProxy);
-    }
+//    static {
+//        Configurator.setLevel(ObjectProxy.class.getName(), LogginProperties.ObjectProxy);
+//    }
     // the real object (as a IObjectProxy, ie EnhancedByCGLib)
     private Object ___proxiedObject;
 

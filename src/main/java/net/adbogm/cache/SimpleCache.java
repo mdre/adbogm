@@ -7,25 +7,23 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import net.adbogm.LogginProperties;
 import net.adbogm.utils.DateHelper;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  * Basado en https://explainjava.com/simple-in-memory-cache-java/
  *
  * @author Marcelo D. Ré {@literal <marcelo.re@gmail.com>}
  */
-public class SimpleCache implements Cache {
+public class SimpleCache implements ICache {
 
     private final static Logger LOGGER = LogManager.getLogger(SimpleCache.class.getName());
 
-    static {
-        Configurator.setLevel(SimpleCache.class.getName(), LogginProperties.SimpleCache);
-    }
+//    static {
+//        Configurator.setLevel(SimpleCache.class.getName(), LogginProperties.SimpleCache);
+//    }
     Thread cleanerThread;
     private int CLEAN_UP_PERIOD_IN_SEC = 3;
     private LocalDateTime cleanUpTime;

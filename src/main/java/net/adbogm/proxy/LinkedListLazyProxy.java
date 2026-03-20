@@ -18,12 +18,10 @@ import java.util.stream.Stream;
 import com.arcadedb.graph.Vertex;
 import com.arcadedb.graph.Vertex.DIRECTION;
 
-import net.adbogm.LogginProperties;
 import net.adbogm.Transaction;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  *
@@ -33,9 +31,9 @@ public class LinkedListLazyProxy extends LinkedList implements ILazyCollectionCa
 
     private final static Logger LOGGER = LogManager.getLogger(LinkedListLazyProxy.class.getName());
 
-    static {
-        Configurator.setLevel(LinkedListLazyProxy.class.getName(), LogginProperties.LinkedListLazyProxy);
-    }
+//    static {
+//        Configurator.setLevel(LinkedListLazyProxy.class.getName(), LogginProperties.LinkedListLazyProxy);
+//    }
     private boolean dirty = false;
 
     private boolean lazyLoad = true;

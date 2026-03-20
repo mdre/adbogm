@@ -19,14 +19,12 @@ import com.arcadedb.graph.MutableVertex;
 import com.arcadedb.graph.Vertex;
 import com.arcadedb.graph.Vertex.DIRECTION;
 
-import net.adbogm.LogginProperties;
 import net.adbogm.Transaction;
 import net.adbogm.exceptions.RelatedToNullException;
 import net.adbogm.utils.ThreadHelper;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  *
@@ -38,9 +36,9 @@ public class ArrayListLazyProxy extends ArrayList implements ILazyCollectionCall
 
     private final static Logger LOGGER = LogManager.getLogger(ArrayListLazyProxy.class.getName());
 
-    static {
-        Configurator.setLevel(ArrayListLazyProxy.class.getName(), LogginProperties.ArrayListLazyProxy);
-    }
+//    static {
+//        Configurator.setLevel(ArrayListLazyProxy.class.getName(), LogginProperties.ArrayListLazyProxy);
+//    }
     private boolean dirty = false;
 
     private boolean lazyLoad = true;

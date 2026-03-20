@@ -7,7 +7,6 @@
 package net.adbogm.utils;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -17,11 +16,11 @@ import java.util.stream.Collectors;
  */
 public class ArrayUtils {
     private final static Logger LOGGER = Logger.getLogger(ArrayUtils.class .getName());
-    static {
-        if (LOGGER.getLevel() == null) {
-            LOGGER.setLevel(Level.INFO);
-        }
-    }
+//    static {
+//        if (LOGGER.getLevel() == null) {
+//            LOGGER.setLevel(Level.INFO);
+//        }
+//    }
     
     public static String Array2String(List l) {
         Object s = l.stream().map(Object::toString).collect(Collectors.joining(", "));

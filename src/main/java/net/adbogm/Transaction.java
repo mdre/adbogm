@@ -50,7 +50,6 @@ import net.adbogm.utils.VertexUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  * Constituye un marco de control para los objetos recuperados.
@@ -61,9 +60,9 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
 
     private final static Logger LOGGER = LogManager.getLogger(Transaction.class.getName());
 
-    static {
-        Configurator.setLevel(Transaction.class.getName(), LogginProperties.Transaction);
-    }
+//    static {
+//        Configurator.setLevel(Transaction.class.getName(), LogginProperties.Transaction);
+//    }
 
     // Es el único objectMapper para todo el SM. 
     private ObjectMapper objectMapper;

@@ -6,7 +6,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import net.adbogm.LogginProperties;
 import net.adbogm.Primitives;
 import static net.adbogm.Primitives.PRIMITIVE_MAP;
 import net.adbogm.annotations.Eager;
@@ -23,7 +22,6 @@ import net.adbogm.exceptions.IncorrectVersionField;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  * Caché con la definición de clases (ClassDef's).
@@ -34,9 +32,9 @@ public class ClassCache {
 
     private final static Logger LOGGER = LogManager.getLogger(ClassCache.class.getName());
 
-    static {
-        Configurator.setLevel(ClassCache.class.getName(), LogginProperties.ClassCache);
-    }
+//    static {
+//        Configurator.setLevel(ClassCache.class.getName(), LogginProperties.ClassCache);
+//    }
     private final HashMap<Class<?>, ClassDef> classCache = new HashMap<>();
 
     public ClassCache() {

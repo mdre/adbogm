@@ -6,7 +6,6 @@
 
 package net.adbogm.utils;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -15,9 +14,9 @@ import java.util.logging.Logger;
  */
 public class ThreadHelper {
     private final static Logger LOGGER = Logger.getLogger(ThreadHelper.class .getName());
-    static {
-        LOGGER.setLevel(Level.INFO);
-    }
+//    static {
+//        LOGGER.setLevel(Level.INFO);
+//    }
     
     /**
      * Retorna un string con el stacktrace hasta el método que lo invoca.
