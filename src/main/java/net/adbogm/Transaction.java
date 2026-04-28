@@ -1375,7 +1375,7 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
                 
                 Vertex v = null;
                 try {
-                    v = this.arcadedbTransact.lookupByRID(new RID(arcadedbTransact, rid)).asVertex();
+                    v = this.arcadedbTransact.lookupByRID(new RID(rid)).asVertex();
                 } catch (Exception e) {
                     throw new UnknownRID(rid, this);
                 }
@@ -1476,7 +1476,7 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
                 this.begin();
                 // recuperar el vértice solicitado
                 try {
-                    Vertex v = this.arcadedbTransact.lookupByRID(new RID(arcadedbTransact, rid)).asVertex();
+                    Vertex v = this.arcadedbTransact.lookupByRID(new RID(rid)).asVertex();
                     // hidratar un objeto
                     o = objectMapper.hydrate(type, v, this);
                 } catch (RecordNotFoundException ex) {

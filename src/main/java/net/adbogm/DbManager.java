@@ -293,7 +293,7 @@ public class DbManager {
         // orden de create
         String sType = (esArista ? "edge" : "vertex");
         String extendsFrom = superName.isEmpty() ? "" : " extends "+superName;
-        String create = String.format("create %s type %s if not exist %s;\n", sType, className, extendsFrom);
+        String create = String.format("create %s type %s if not exists %s;\n", sType, className, extendsFrom);
         
         clazzStruct.create = create +"\n"
                 + "alter type " + className + " custom javaClass='" + clazz.getCanonicalName() + "';\n";
@@ -345,15 +345,13 @@ public class DbManager {
                     }
                     String statement = "create property " + currentProp + " " + type + ";";
                     String let = "\n"
-                                    +"let exist = select from "
-                                                        + "(select expand(properties) "
-                                                        + " from (select expand(classes) "
-                                                        + " from metadata:schema) "
-                                                        + " where name = '"+className+"') where name = '"+fieldName+"';\n"
+                                    + "let exist = select from "
+                                    + "(select expand(properties) from schema:types where name = '" + className + "') "
+                                    + "where name = '" + fieldName + "';\n"
                                     + "if ($exist.size()=0) {\n"
                                     + "    %s"
                                     + "\n}\n ";
-                    
+
                     statement = this.incremental ? String.format(let, statement) : statement;
                     clazzStruct.properties.add(statement);
 

@@ -335,7 +335,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                             // si se está usando la instrumentación de clase, directamente verificar en el objeto
                             // cual es su estado.
                             LOGGER.log(Level.TRACE, "o: {} ITrans: {}", new Object[]{target.getClass().getName(), target instanceof ITransparentDirtyDetector});
-                            if (((ITransparentDirtyDetector) target).___tdd___isDirty()) {
+                            if (target instanceof ITransparentDirtyDetector detector && detector.___tdd___isDirty()) {
                                 LOGGER.log(Level.TRACE, "objeto {} marcado como dirty por ASM. Agregarlo a la lista de pendientes.", target.getClass().getName());
                                 this.___setDirty();
                             }
@@ -740,6 +740,10 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
         return ___dirty;
     }
 
+    private ITransparentDirtyDetector dirtyDetector() {
+        return this.___proxiedObject instanceof ITransparentDirtyDetector detector ? detector : null;
+    }
+
     /**
      * Marca el objeto como dirty para que sea considerado en el próximo commit
      *
@@ -764,7 +768,10 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
         // antes de proceder.
         if (this.___transaction.getSessionManager().getActivationStrategy() == SessionManager.ActivationStrategy.CLASS_INSTRUMENTATION) {
             LOGGER.log(Level.DEBUG, "CLASS_INSTRUMENTATION Strategy.");
-            ((ITransparentDirtyDetector) this.___proxiedObject).___tdd___clearDirty();
+            ITransparentDirtyDetector detector = dirtyDetector();
+            if (detector != null) {
+                detector.___tdd___clearDirty();
+            }
         }
     }
 
@@ -774,7 +781,8 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
         LOGGER.log(Level.DEBUG, "valid: {}", this.___isValidObject);
         LOGGER.log(Level.DEBUG, "dirty: {}", this.___dirty);
         LOGGER.log(Level.DEBUG, "rid: {}", this.___baseElement.getIdentity());
-        LOGGER.log(Level.DEBUG, "modified fields: {}", ((ITransparentDirtyDetector) this.___proxiedObject).___tdd___getModifiedFields());
+        ITransparentDirtyDetector detector = dirtyDetector();
+        LOGGER.log(Level.DEBUG, "modified fields: {}", detector != null ? detector.___tdd___getModifiedFields() : "<dirty-detector-unavailable>");
 
         if (this.___dirty) {
 
@@ -787,11 +795,13 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
 
             if (!this.___isNew()) {
                 //dejar solo los campos que se hayan modificado
-                LOGGER.log(Level.DEBUG, "modified fields: " + String.join(", ", ((ITransparentDirtyDetector) this.___proxiedObject).___tdd___getModifiedFields()));
-                Set<String> retainFields = ((ITransparentDirtyDetector) this.___proxiedObject).___tdd___getModifiedFields();
-                // agregar los fields que son enums dado que se tratan como campos pero no reaccionan la TDD porque no hay forma de notifiarlos
-                retainFields.addAll(cDef.enumCollectionFields.keySet());
-                omap.keySet().retainAll(retainFields);
+                if (detector != null) {
+                    LOGGER.log(Level.DEBUG, "modified fields: " + String.join(", ", detector.___tdd___getModifiedFields()));
+                    Set<String> retainFields = detector.___tdd___getModifiedFields();
+                    // agregar los fields que son enums dado que se tratan como campos pero no reaccionan la TDD porque no hay forma de notifiarlos
+                    retainFields.addAll(cDef.enumCollectionFields.keySet());
+                    omap.keySet().retainAll(retainFields);
+                }
             }
 
             LOGGER.log(Level.DEBUG, "omap: " + omap);
