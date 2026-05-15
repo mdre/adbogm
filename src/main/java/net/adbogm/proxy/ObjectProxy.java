@@ -799,6 +799,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                     LOGGER.log(Level.DEBUG, "modified fields: " + String.join(", ", detector.___tdd___getModifiedFields()));
                     Set<String> retainFields = detector.___tdd___getModifiedFields();
                     // agregar los fields que son enums dado que se tratan como campos pero no reaccionan la TDD porque no hay forma de notifiarlos
+                    retainFields.addAll(cDef.enumFields.keySet());
                     retainFields.addAll(cDef.enumCollectionFields.keySet());
                     omap.keySet().retainAll(retainFields);
                 }

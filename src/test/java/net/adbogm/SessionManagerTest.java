@@ -1034,6 +1034,26 @@ public class SessionManagerTest {
         e = sm.get(Enums.class, rid);
         assertNull(e.getTheEnum());
     }
+
+    @Test
+    public void persistModifiedScalarEnumAfterReload() {
+        Enums e = new Enums();
+        e.setTheEnum(EnumTest.UNO);
+        e = sm.store(e);
+        sm.commit();
+
+        String rid = sm.getRID(e);
+        sm.getCurrentTransaction().clearCache();
+        e = sm.get(Enums.class, rid);
+        assertEquals(EnumTest.UNO, e.getTheEnum());
+
+        e.setTheEnum(EnumTest.DOS);
+        sm.commit();
+        sm.getCurrentTransaction().clearCache();
+
+        e = sm.get(Enums.class, rid);
+        assertEquals(EnumTest.DOS, e.getTheEnum());
+    }
     
     @Test
     public void testRollbackEnum() {

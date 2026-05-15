@@ -16,3 +16,7 @@ log/
 nbproject/
 rebel.xml
 .~lock*
+
+gradlew
+gradlew.bat
+gradle/wrapper
