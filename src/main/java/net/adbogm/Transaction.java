@@ -596,7 +596,9 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
             }
 
             LOGGER.log(Level.DEBUG, "Marcando como dirty: {}", proxy.getClass().getSimpleName());
-            this.dirty.put(v.getIdentity().toString(), proxy);
+            // Usar el flujo normal de dirty tracking para mantener sincronizados
+            // el flag interno del proxy y el registro de objetos dirty de la transacción.
+            ((IObjectProxy) proxy).___setDirty();
             LOGGER.log(Level.DEBUG, "dirty.size: {}",this.dirty.size());
             
             // si se está en proceso de commit, registrar el objeto junto con el proxy para 
