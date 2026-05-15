@@ -338,6 +338,9 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                             if (target instanceof ITransparentDirtyDetector detector && detector.___tdd___isDirty()) {
                                 LOGGER.log(Level.TRACE, "objeto {} marcado como dirty por ASM. Agregarlo a la lista de pendientes.", target.getClass().getName());
                                 this.___setDirty();
+                            } else if (method.getName().startsWith("set") && method.getParameterCount() > 0) {
+                                LOGGER.log(Level.TRACE, "setter {} sin marca dirty por ASM. Agregarlo a la lista de pendientes.", method.getName());
+                                this.___setDirty();
                             }
                     }
                 }
