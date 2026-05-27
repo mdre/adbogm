@@ -484,6 +484,10 @@ public class SessionManager implements IActions.IStore, IActions.IGet {
      * @param param parámetros extras para el query parametrizado.
      * @return una lista de la clase solicitada con los objetos lazy inicializados.
      */
+    public <T> List<T> query(Class<T> clase, QueryLanguage language, String query, Map params) {
+        return this.publicTransaction.query(clase, language, query, params);
+    }
+
     public <T> List<T> query(Class<T> clase, String sql, HashMap<String,Object> param) {
         return this.publicTransaction.query(clase, sql, param);
     }

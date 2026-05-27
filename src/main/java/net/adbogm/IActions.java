@@ -131,6 +131,19 @@ public interface IActions {
          * @return una lista de la clase solicitada con los objetos lazy inicializados.
          */
         public <T> List<T> query(Class<T> clase, String sql, Map params);
+
+        /**
+         * Ejecuta un prepared query en el lenguaje indicado y devuelve una lista de la clase indicada.
+         * Esta consulta acepta parámetros por nombre.
+         *
+         * @param <T> clase de referencia para crear la lista de resultados
+         * @param clase clase de referencia
+         * @param language lenguaje de consulta soportado por ArcadeDB
+         * @param query comando a ejecutar
+         * @param params parámetros extras para el query parametrizado.
+         * @return una lista de la clase solicitada con los objetos lazy inicializados.
+         */
+        public <T> List<T> query(Class<T> clase, QueryLanguage language, String query, Map params);
     }
 
 }
