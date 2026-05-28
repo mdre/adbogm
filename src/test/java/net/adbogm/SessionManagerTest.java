@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import net.adbogm.annotations.Entity;
 import net.adbogm.annotations.RID;
 import net.adbogm.annotations.Version;
@@ -24,6 +25,7 @@ import net.adbogm.exceptions.ObjectMarkedAsDeleted;
 import net.adbogm.exceptions.ReferentialIntegrityViolation;
 import net.adbogm.exceptions.UnknownRID;
 import net.adbogm.proxy.IObjectProxy;
+import net.adbogm.proxy.ObjectProxy;
 import net.adbogm.security.UserSID;
 import net.adbogm.utils.DateHelper;
 import net.dirtydetector.agent.ITransparentDirtyDetector;
@@ -51,7 +53,6 @@ import test.SimpleVertexInterfaceAttr;
 import test.SimpleVertexWithEmbedded;
 import test.SimpleVertexWithImplement;
 import test.SubSecure;
-import test.TestConfig;
 
 /**
  *
@@ -77,19 +78,7 @@ public class SessionManagerTest {
     @Before
     public void setUp() {
         LOGGER.info("Iniciando session manager...");
-//        sm = new SessionManager(TestConfig.TESTSERVER,TestConfig.TESTGRPCDBPORT, TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS, true)
-        sm = new SessionManager(TestConfig.TESTSERVER, TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS)
-//                .setClassLevelLog(TransparentDirtyDetectorInstrumentator.class, Level.FINER)
-//                .setClassLevelLog(ObjectProxy.class, Level.FINEST)
-//                .setClassLevelLog(ClassCache.class, Level.FINER)
-//                .setClassLevelLog(Transaction.class, Level.FINEST)
-//                .setClassLevelLog(ObjectProxy.class, Level.FINER)
-//                .setClassLevelLog(SimpleCache.class, Level.FINER)
-//                .setClassLevelLog(ArrayListLazyProxy.class, Level.FINER)
-//                .setClassLevelLog(ObjectMapper.class, Level.FINEST)
-//                .setClassLevelLog(SObject.class, Level.FINER)
-//                .setClassLevelLog(TransparentDirtyDetectorInstrumentator.class, Level.INFO)
-                ;
+        sm = SetupSessionManager.getSessionManager();
         LOGGER.info("Begin");
         this.sm.begin();
         sm.getCurrentTransaction().setCacheCleanInterval(1);
@@ -534,6 +523,26 @@ public class SessionManagerTest {
         assertEquals(expResult.getSvinner().getoB(), result.getSvinner().getoB());
         assertEquals(expResult.getSvinner().getoF(), result.getSvinner().getoF());
         assertEquals(expResult.getSvinner().getoI(), result.getSvinner().getoI());
+    }
+    
+    @Test
+    public void persistModifiedScalarEnumAfterReload() {
+        Enums e = new Enums();
+        e.setTheEnum(EnumTest.UNO);
+        e = sm.store(e);
+        sm.commit();
+
+        String rid = sm.getRID(e);
+        sm.getCurrentTransaction().clearCache();
+        e = sm.get(Enums.class, rid);
+        assertEquals(EnumTest.UNO, e.getTheEnum());
+
+        e.setTheEnum(EnumTest.DOS);
+        sm.commit();
+        sm.getCurrentTransaction().clearCache();
+
+        e = sm.get(Enums.class, rid);
+        assertEquals(EnumTest.DOS, e.getTheEnum());
     }
 
     @Test
@@ -1129,7 +1138,9 @@ public class SessionManagerTest {
     @Test
     public void testRollbackCollectionsInSObject() {
         sm.setLoggedInUser(new UserSID("User", "uuid"));
-        
+        sm.setClassLevelLog(ObjectProxy.class, Level.TRACE);
+        sm.setClassLevelLog(Transaction.class, Level.TRACE);
+//        sm.setClassLevelLog(ArrayListLazyProxy.class, Level.TRACE);
         SubSecure ss = new SubSecure();
         ss.aList.add(new SimpleVertex());
         Secure sec = new Secure("Secure vertex");
@@ -1142,8 +1153,12 @@ public class SessionManagerTest {
         stored.setS("Before rollback");
         stored.subs.iterator().next().aList.add(new SimpleVertex());
         stored.subs.add(new SubSecure());
-        System.out.println("Before rollback:  "+stored.subs.size());
-        System.out.println("subs class:" +stored.subs.getClass().getCanonicalName());
+        System.out.println("Before rollback:  ");
+        System.out.println("    rid: "+((IObjectProxy)stored).___getRid());
+        System.out.println("    dirty: "+((IObjectProxy)stored).___isDirty());
+        System.out.println("    subs.size: "+stored.subs.size());
+        System.out.println("    subs class:" +stored.subs.getClass().getCanonicalName());
+        System.out.println("dirties: "+sm.getCurrentTransaction().getDirty().stream().map(o->((IObjectProxy)o).___getRid()).collect(Collectors.joining(", ")));
         sm.rollback();
 
         //asserts:
@@ -3136,7 +3151,7 @@ public class SessionManagerTest {
         sv.setLooptest(new SimpleVertexEx());
         sm.commit();
         String rid = sm.getRID(sv);
-        
+        System.out.println("RID: "+rid);
         sv.setS(null);
         sv.setFecha(null);
         sv.setLooptest(null);

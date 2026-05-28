@@ -183,7 +183,7 @@ public class SessionManager implements IActions.IStore, IActions.IGet {
         RemoteDatabase dbTx = null;
         if (grpcPort>0) {
             RemoteGrpcDatabase gdb= new RemoteGrpcDatabase(this.grpcServer, serverName, grpcPort, port, database, user, passwd);
-             dbTx = (RemoteDatabase)gdb;
+            dbTx = (RemoteDatabase)gdb;
         } else {
             dbTx = new RemoteDatabase(serverName, port, database, user, passwd);
         }

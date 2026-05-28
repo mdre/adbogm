@@ -16,7 +16,6 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 import test.SSimpleVertex;
-import test.TestConfig;
 
 /**
  *
@@ -29,12 +28,7 @@ public class SecurityObjectsTest {
     @Before
     public void setUp() {
 //        sm = new SessionManager(TestConfig.TESTSERVER, TestConfig.TESTGRPCDBPORT,TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS, true)
-        sm = new SessionManager(TestConfig.TESTSERVER, TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS)
-//                    .setClassLevelLog(Transaction.class, Level.INFO)
-                    //.setClassLevelLog(TransparentDirtyDetectorInstrumentator.class, Level.INFO)
-                    //.setClassLevelLog(InstrumentableClassDetector.class, Level.INFO)
-                    //.setClassLevelLog(ClassCache.class, Level.FINER)
-                ;
+        sm = SetupSessionManager.getSessionManager();
         sm.begin();
     }
 

@@ -457,10 +457,14 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
      */
     public synchronized void rollback() {
         //initInternalTx();
-        LOGGER.log(Level.DEBUG, "Rollback ------------------------");
+        LOGGER.log(Level.DEBUG, "**********************************************************");
+        LOGGER.log(Level.DEBUG, "****************** Transaction Rollback ******************");
+        LOGGER.log(Level.DEBUG, "**********************************************************");
         LOGGER.log(Level.DEBUG, "Dirty objects: {}", dirty.size());
+        LOGGER.log(Level.DEBUG, "Dirty objects: {}", dirty);
         LOGGER.log(Level.DEBUG, "Dirty deleted objects: {}", dirtyDeleted.size());
         LOGGER.log(Level.DEBUG, "arcadedbTransact.isTransactionActive(): {}", this.arcadedbTransact.isTransactionActive());
+        LOGGER.log(Level.DEBUG, "**********************************************************");
         
         // si hay una transacción activa, hacer rollback
         if (this.arcadedbTransact.isTransactionActive()) {
@@ -566,7 +570,6 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
             // fijar el RID temporal.
             v.save();
             v.reload(); // forzar la recarga 
-            System.out.println("v.reload: "+v.toMap());
             LOGGER.log(Level.TRACE, "virtual RID: {}",v.getIdentity().toString());
             
             proxy = ObjectProxyFactory.create(o, v, this);
@@ -1375,7 +1378,7 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
                 
                 Vertex v = null;
                 try {
-                    v = this.arcadedbTransact.lookupByRID(new RID(arcadedbTransact, rid)).asVertex();
+                    v = this.arcadedbTransact.lookupByRID(new RID(rid)).asVertex();
                 } catch (Exception e) {
                     throw new UnknownRID(rid, this);
                 }
@@ -1476,7 +1479,7 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
                 this.begin();
                 // recuperar el vértice solicitado
                 try {
-                    Vertex v = this.arcadedbTransact.lookupByRID(new RID(arcadedbTransact, rid)).asVertex();
+                    Vertex v = this.arcadedbTransact.lookupByRID(new RID(rid)).asVertex();
                     // hidratar un objeto
                     o = objectMapper.hydrate(type, v, this);
                 } catch (RecordNotFoundException ex) {
@@ -1610,7 +1613,7 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
         if (retVal.isEmpty()) {
             retVal = or.getPropertyNames().iterator().next();
         }
-        int ret = or.getProperty(retVal);
+        long ret = or.getProperty(retVal);
         ors.close();
         //closeInternalTx();
         return ret;

@@ -800,7 +800,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
             VertexUtils.fillElement(this.___baseElement, omap);
 
             oStruct.removedProperties.forEach(prop -> this.___baseElement.modify().remove(prop));
-
+            
             // guardar log de auditoría si corresponde.
             if (this.___transaction.isAuditing()) {
                 this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "UPDATE", omap);
@@ -1285,7 +1285,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
      */
     @Override
     public synchronized void ___rollback() {
-        LOGGER.log(Level.DEBUG, "\n\n******************* ROLLBACK *******************\n\n");
+        LOGGER.log(Level.DEBUG, "\n\n******************* ROLLBACK: {} *******************\n\n",this.___baseElement.getIdentity().toString());
         LOGGER.log(Level.TRACE, ThreadHelper.getCurrentStackTrace());
 
 //        this.___transaction.initInternalTx();

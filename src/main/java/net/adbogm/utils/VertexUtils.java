@@ -5,6 +5,7 @@
  */
 package net.adbogm.utils;
 
+import com.arcadedb.database.MutableDocument;
 import com.arcadedb.database.Record;
 import com.arcadedb.graph.Edge;
 import com.arcadedb.graph.Vertex;
@@ -80,8 +81,9 @@ public class VertexUtils {
      * @param omap  pares de valores con el nombre de los campos y los valores a asignar.
      */
     public static void fillElement(Record oRecord, Map<String,Object> omap) {
+        MutableDocument mRec = oRecord.asDocument().modify();
         omap.entrySet().stream().forEach(entry->{
-            oRecord.asDocument().modify().set(entry.getKey(), entry.getValue());
+            mRec.set(entry.getKey(), entry.getValue());
         });
     }
 }

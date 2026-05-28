@@ -674,6 +674,12 @@ public class ObjectMapper {
 //        LOGGER.setLevel(Level.TRACE);
         Field f = this.classCache.get(o.getClass()).fieldsObject.get(field);
         LOGGER.log(Level.TRACE, "field f: {} - type: {} - value type: {}",new Object[]{f.getName(),f.getType(),(value!=null?value.getClass():"NULL")});
+        
+        if (value == null && f.getType().isPrimitive()) {
+            LOGGER.log(Level.DEBUG, "Skipping null assignment on primitive field: {}", f.getName());
+            return;
+        }
+
         try {
             f.set(o, value);
         } catch (IllegalArgumentException | IllegalAccessException ex) {

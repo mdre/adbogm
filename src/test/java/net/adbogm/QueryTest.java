@@ -16,7 +16,6 @@ import org.junit.Test;
 import test.Foo;
 import test.SimpleVertex;
 import test.SimpleVertexEx;
-import test.TestConfig;
 
 /**
  *
@@ -29,19 +28,7 @@ public class QueryTest {
 
     @Before
     public void setUp() {
-//        sm = new SessionManager(TestConfig.TESTSERVER,TestConfig.TESTGRPCDBPORT,TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS, true)
-        sm = new SessionManager(TestConfig.TESTSERVER,TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS)
-//                    .setClassLevelLog(Transaction.class, Level.INFO)
-                // .setClassLevelLog(ObjectProxy.class, Level.FINEST)
-//                .setClassLevelLog(ClassCache.class, Level.FINER)
-//                .setClassLevelLog(Transaction.class, Level.FINEST)
-//                .setClassLevelLog(ObjectProxy.class, Level.FINER)
-//                .setClassLevelLog(SimpleCache.class, Level.FINER)
-//                .setClassLevelLog(ArrayListLazyProxy.class, Level.FINER)
-//                .setClassLevelLog(ObjectMapper.class, Level.FINEST)
-//                .setClassLevelLog(SObject.class, Level.FINER)
-//                .setClassLevelLog(TransparentDirtyDetectorInstrumentator.class, Level.FINER)
-                ;
+        sm = SetupSessionManager.getSessionManager();
         sm.begin();
     }
 
