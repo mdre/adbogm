@@ -4,11 +4,13 @@ import com.arcadedb.graph.Vertex;
 import com.arcadedb.query.sql.executor.ResultSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import org.junit.Before;
@@ -188,6 +190,80 @@ public class QueryTest {
         try (var res = sm.query("select from SimpleVertex where i = :i", params)) {
             assertTrue(res.hasNext());
         }
+    }
+
+    @Test
+    public void typedSqlQueryLanguageNamedParams() throws Exception {
+        String text = "typed sql named " + new Random().nextInt();
+        sm.store(new Foo(text));
+        sm.store(new Foo("excluded " + text));
+        sm.commit();
+        sm.getCurrentTransaction().clearCache();
+
+        List<Foo> res = sm.query(Foo.class, QueryLanguage.SQL,
+                "select from FooNode where text = :text",
+                Map.of("text", text));
+
+        assertEquals(1, res.size());
+        assertEquals(text, res.iterator().next().getText());
+    }
+
+    @Test
+    public void typedCypherQueryLanguageEntityReturn() throws Exception {
+        String text = "cypher typed language " + new Random().nextInt();
+        Foo foo = new Foo(text);
+        foo.add(new SimpleVertex("related vertex"));
+        sm.store(foo);
+        sm.commit();
+        sm.getCurrentTransaction().clearCache();
+
+        List<Foo> res = sm.query(Foo.class, QueryLanguage.OPENCYPHER,
+                """
+                MATCH (f:FooNode)
+                WHERE f.text = $text
+                RETURN DISTINCT f
+                """,
+                Map.of("text", text));
+
+        assertEquals(1, res.size());
+        assertEquals(text, res.iterator().next().getText());
+        assertEquals("related vertex", res.iterator().next().getLsve().iterator().next().getS());
+    }
+
+    @Test
+    public void cypherTypedMultipleReturnFails() throws Exception {
+        String text = "cypher multi " + new Random().nextInt();
+        Foo foo = new Foo(text);
+        foo.add(new SimpleVertex("related vertex"));
+        sm.store(foo);
+        sm.commit();
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> sm.query(Foo.class, QueryLanguage.OPENCYPHER,
+                        """
+                        MATCH (f:FooNode)-[:FooNode_lsve]->(sv:SimpleVertex)
+                        WHERE f.text = $text
+                        RETURN f, sv
+                        """,
+                        Map.of("text", text)));
+        assertTrue(ex.getMessage().contains("RETURN de una única entidad"));
+    }
+
+    @Test
+    public void cypherTypedScalarProjectionFails() throws Exception {
+        String text = "cypher projection " + new Random().nextInt();
+        sm.store(new Foo(text));
+        sm.commit();
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> sm.query(Foo.class, QueryLanguage.OPENCYPHER,
+                        """
+                        MATCH (f:FooNode)
+                        WHERE f.text = $text
+                        RETURN f.text
+                        """,
+                        Map.of("text", text)));
+        assertTrue(ex.getMessage().contains("RETURN de una única entidad"));
     }
     
 }

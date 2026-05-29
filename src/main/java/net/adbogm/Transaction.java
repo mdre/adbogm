@@ -1698,6 +1698,17 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
         return ret;
     }
 
+    private <T> T getSingleCypherEntity(Class<T> clase, Result row) {
+        if (row.getElement().isEmpty() || row.getIdentity().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "OpenCypher solo soporta RETURN de una única entidad. "
+                    + "No usar RETURN múltiple ni proyecciones escalares."
+            );
+        }
+
+        return this.get(clase, row.getIdentity().get().toString());
+    }
+
     /**
      * Ejecuta un prepared query y devuelve una lista de la clase indicada. Esta consulta acepta parámetros por nombre. Ej:
      * <pre> {@code
@@ -1722,13 +1733,24 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
     public <T> List<T> query(Class<T> clase, String sql, Map params) {
         //initInternalTx();
 
+        return query(clase, QueryLanguage.SQL, sql, params);
+    }
+
+    @Override
+    public <T> List<T> query(Class<T> clase, QueryLanguage language, String query, Map params) {
         ArrayList<T> ret = new ArrayList<>();
 
-        LOGGER.log(Level.DEBUG, sql);
-        try (ResultSet ors = this.arcadedbTransact.query("SQL",sql, params)) {
-            ors.stream().forEach(v -> ret.add(this.get(clase, v.getIdentity().get().toString())));
+        LOGGER.log(Level.DEBUG, query);
+        try (ResultSet resultSet = this.arcadedbTransact.query(language.toString(), query, params)) {
+            while (resultSet.hasNext()) {
+                Result row = resultSet.next();
+                if (language == QueryLanguage.OPENCYPHER) {
+                    ret.add(getSingleCypherEntity(clase, row));
+                } else {
+                    ret.add(this.get(clase, row.getIdentity().get().toString()));
+                }
+            }
         }
-        //closeInternalTx();
         return ret;
     }
 
