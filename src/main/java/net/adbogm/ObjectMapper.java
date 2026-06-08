@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import net.adbogm.annotations.Indirect;
+import net.adbogm.annotations.OnlyAdd;
 import net.adbogm.cache.ClassCache;
 import net.adbogm.cache.ClassDef;
 import net.adbogm.exceptions.CollectionNotSupported;
@@ -443,16 +444,16 @@ public class ObjectMapper {
                 LOGGER.log(Level.TRACE, "Field: {}   Class: {}", field, fc.getName());
                 fLink = classdef.fieldsObject.get(field);
                 
-                String graphRelationName;
-                if (indirect) {
+                String graphRelationName = getGraphRelationName(classdef, fLink);
+                if (indirect && !fLink.isAnnotationPresent(OnlyAdd.class)) {
                     Indirect in = fLink.getAnnotation(Indirect.class);
                     graphRelationName = in.linkName();
-                } else {
-                    graphRelationName = classdef.entityName + "_" + field;
                 }
 
                 // si hay Vértices conectados o si el constructor del objeto ha inicializado los vectores, convertirlos
-                if ((v.getEdges(relationDirection, graphRelationName).iterator().hasNext()) || (fLink.get(proxy) != null)) {
+                if (fLink.isAnnotationPresent(OnlyAdd.class)
+                        || (v.getEdges(relationDirection, graphRelationName).iterator().hasNext())
+                        || (fLink.get(proxy) != null)) {
                     this.collectionToLazy(proxy, field, fc, v, t);
                 }
             } catch (IllegalArgumentException | IllegalAccessException ex) {
@@ -511,11 +512,10 @@ public class ObjectMapper {
             ClassDef classdef = classCache.get(c);
             Field fLink = classdef.fieldsObject.get(field);
 
-            String graphRelationName = classdef.entityName + "_" + field;
-            // Determinar la dirección
+            String graphRelationName = getGraphRelationName(classdef, fLink);
             Vertex.DIRECTION direction = Vertex.DIRECTION.OUT;
 
-            if (fLink.isAnnotationPresent(Indirect.class)) {
+            if (!fLink.isAnnotationPresent(OnlyAdd.class) && fLink.isAnnotationPresent(Indirect.class)) {
                 // si es un indirect se debe reemplazar el nombre de la relación por 
                 // el propuesto por la anotation
                 Indirect in = fLink.getAnnotation(Indirect.class);
@@ -532,6 +532,9 @@ public class ObjectMapper {
                 // inicializar la colección
                 ((ILazyCollectionCalls) col).init(t, v, (IObjectProxy) o,
                         graphRelationName, listClass, direction);
+                if (fLink.isAnnotationPresent(OnlyAdd.class)) {
+                    ((ILazyCollectionCalls) col).setOnlyAdd(fLink.getAnnotation(OnlyAdd.class).attribute());
+                }
 
             } else if (col instanceof Map) {
                 ParameterizedType listType = (ParameterizedType) fLink.getGenericType();
@@ -549,6 +552,18 @@ public class ObjectMapper {
         } catch (SecurityException | IllegalArgumentException | IllegalAccessException | InstantiationException ex) {
             LOGGER.log(Level.ERROR, "ERROR",ex);
         }
+    }
+
+    public String getGraphRelationName(ClassDef classdef, Field field) {
+        if (field.isAnnotationPresent(OnlyAdd.class)) {
+            OnlyAdd onlyAdd = field.getAnnotation(OnlyAdd.class);
+            String targetField = onlyAdd.attribute().isEmpty() ? field.getName() : onlyAdd.attribute();
+            return classdef.entityName + "_" + targetField;
+        }
+        if (field.isAnnotationPresent(Indirect.class)) {
+            return field.getAnnotation(Indirect.class).linkName();
+        }
+        return classdef.entityName + "_" + field.getName();
     }
 
     /**
