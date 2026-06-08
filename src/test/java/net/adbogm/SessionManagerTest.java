@@ -45,6 +45,9 @@ import test.Enums;
 import test.Foo;
 import test.IndirectObject;
 import test.InterfaceTest;
+import test.OnlyAddChild;
+import test.OnlyAddHolder;
+import test.OnlyAddParent;
 import test.SVExChild;
 import test.Secure;
 import test.SimpleVertex;
@@ -219,6 +222,81 @@ public class SessionManagerTest {
         assertEquals(targetDate, ret.getFecha()); 
  
    }
+
+    @Test
+    public void testOnlyAddWithAttribute() {
+        OnlyAddParent parent = sm.store(new OnlyAddParent());
+        parent.addItem(new OnlyAddChild("child-with-attribute"));
+
+        sm.commit();
+
+        String parentRid = sm.getRID(parent);
+        assertEquals(1, countOut(parentRid, "OnlyAddParent_items"));
+        assertEquals(0, parent.getNewItems().size());
+
+        sm.commit();
+
+        assertEquals(1, countOut(parentRid, "OnlyAddParent_items"));
+        sm.getCurrentTransaction().clearCache();
+
+        OnlyAddParent reloaded = sm.get(OnlyAddParent.class, parentRid);
+        assertEquals(1, reloaded.getItems().size());
+        assertEquals("child-with-attribute", reloaded.getItems().get(0).getName());
+    }
+
+    @Test
+    public void testOnlyAddWithoutAttribute() {
+        OnlyAddParent parent = sm.store(new OnlyAddParent());
+        parent.addNotification(new OnlyAddChild("direct-child"));
+
+        sm.commit();
+
+        String parentRid = sm.getRID(parent);
+        assertEquals(1, countOut(parentRid, "OnlyAddParent_notifications"));
+        assertEquals(0, parent.getNotifications().size());
+
+        sm.commit();
+
+        assertEquals(1, countOut(parentRid, "OnlyAddParent_notifications"));
+    }
+
+    @Test
+    public void testOnlyAddWithAttributeAfterReload() {
+        OnlyAddParent parent = sm.store(new OnlyAddParent());
+        sm.commit();
+
+        String parentRid = sm.getRID(parent);
+        sm.getCurrentTransaction().clearCache();
+
+        OnlyAddParent reloaded = sm.get(OnlyAddParent.class, parentRid);
+        reloaded.addItem(new OnlyAddChild("child-after-reload"));
+
+        sm.commit();
+
+        assertEquals(1, countOut(parentRid, "OnlyAddParent_items"));
+        assertEquals(0, reloaded.getNewItems().size());
+    }
+
+    @Test
+    public void testOnlyAddWithAttributeThroughLoadedLink() {
+        OnlyAddHolder holder = sm.store(new OnlyAddHolder(new OnlyAddParent()));
+        sm.commit();
+
+        String parentRid = sm.getRID(holder.getParent());
+        String holderRid = sm.getRID(holder);
+        sm.getCurrentTransaction().clearCache();
+
+        OnlyAddHolder reloaded = sm.get(OnlyAddHolder.class, holderRid);
+        reloaded.addItemToParent(new OnlyAddChild("child-through-link"));
+
+        sm.commit();
+
+        assertEquals(1, countOut(parentRid, "OnlyAddParent_items"));
+    }
+
+    private long countOut(String rid, String relation) {
+        return sm.query(String.format("select count(*) from (select expand(out('%s')) from %s)", relation, rid), "");
+    }
 
     @Test
     public void testStorePrimitiveCol() {

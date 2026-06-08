@@ -205,3 +205,16 @@ alter type SubSecure custom javaClass='test.SubSecure';
 
 create edge type SubSecure_aList if not exists ;
 
+create vertex type OnlyAddChild if not exists;
+alter type OnlyAddChild custom javaClass='test.OnlyAddChild';
+create property OnlyAddChild.name if not exists STRING;
+
+create vertex type OnlyAddParent if not exists;
+alter type OnlyAddParent custom javaClass='test.OnlyAddParent';
+
+create edge type OnlyAddParent_items if not exists;
+create edge type OnlyAddParent_notifications if not exists;
+
+create vertex type OnlyAddHolder if not exists;
+alter type OnlyAddHolder custom javaClass='test.OnlyAddHolder';
+create edge type OnlyAddHolder_parent if not exists;

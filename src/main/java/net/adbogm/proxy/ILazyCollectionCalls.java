@@ -29,5 +29,7 @@ public interface ILazyCollectionCalls extends ILazyCalls {
      */
     public void init(Transaction sm, Vertex relatedTo, IObjectProxy parent, String field, Class<?> c, DIRECTION d);
     public Map<Object,ObjectCollectionState> collectionState();
+    public String getRelationName();
+    public void setOnlyAdd(String referenceAttribute);
     
 }
