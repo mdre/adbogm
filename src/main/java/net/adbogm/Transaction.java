@@ -16,6 +16,7 @@ import com.arcadedb.schema.DocumentType;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -328,15 +329,21 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
             LOGGER.log(Level.DEBUG, "Objetos marcados como DirtyDeleted: {}", dirtyDeleted.size());
             
             // process all the dirty objects:
-            for (Map.Entry<String, Object> e : dirty.entrySet()) {
-                String rid = e.getKey();
-                IObjectProxy o = (IObjectProxy) e.getValue();
-                if (!o.___isDeleted() && o.___isValid()) {
-                    LOGGER.log(Level.DEBUG, "Commiting: {} class: {} isValid: {}", new Object[]{rid, o.___getBaseClass(), o.___isValid()});
-                    // actualizar todos los objetos antes de bajarlos.
-                    
-                    //@TODO: CHEQUEAR VERSIÓN YA ACÁ
-                    o.___commit();
+            Set<String> processedDirty = new HashSet<>();
+            while (!processedDirty.containsAll(dirty.keySet())) {
+                for (Map.Entry<String, Object> e : dirty.entrySet()) {
+                    String rid = e.getKey();
+                    if (!processedDirty.contains(rid)) {
+                        IObjectProxy o = (IObjectProxy) e.getValue();
+                        if (!o.___isDeleted() && o.___isValid()) {
+                            LOGGER.log(Level.DEBUG, "Commiting: {} class: {} isValid: {}", new Object[]{rid, o.___getBaseClass(), o.___isValid()});
+                            // actualizar todos los objetos antes de bajarlos.
+                            
+                            //@TODO: CHEQUEAR VERSIÓN YA ACÁ
+                            o.___commit();
+                        }
+                        processedDirty.add(rid);
+                    }
                 }
             }
             
@@ -657,7 +664,8 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
                 String field = link.getKey();
                 Object value = link.getValue();
 
-                final String graphRelationName = classname + "_" + field;
+                final String graphRelationName = this.objectMapper.getGraphRelationName(
+                        oClassDef, oClassDef.fieldsObject.get(field));
 
                 LOGGER.log(Level.DEBUG, "field: {} clase: {}", new Object[]{field, value.getClass().getName()});
                 if (value instanceof List) {
