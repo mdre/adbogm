@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -237,6 +238,7 @@ public class SessionManagerTest {
     @Test
     public void testOnlyAddWithAttribute() {
         OnlyAddParent parent = sm.store(new OnlyAddParent());
+        assertTrue(parent instanceof ITransparentDirtyDetector);
         parent.addItem(new OnlyAddChild("child-with-attribute"));
 
         sm.commit();
@@ -280,6 +282,7 @@ public class SessionManagerTest {
         sm.getCurrentTransaction().clearCache();
 
         OnlyAddParent reloaded = sm.get(OnlyAddParent.class, parentRid);
+        assertTrue(reloaded instanceof ITransparentDirtyDetector);
         reloaded.addItem(new OnlyAddChild("child-after-reload"));
 
         sm.commit();
@@ -298,10 +301,95 @@ public class SessionManagerTest {
         sm.getCurrentTransaction().clearCache();
 
         OnlyAddHolder reloaded = sm.get(OnlyAddHolder.class, holderRid);
+        assertTrue(reloaded instanceof ITransparentDirtyDetector);
+        assertTrue(reloaded.getParent() instanceof ITransparentDirtyDetector);
         reloaded.addItemToParent(new OnlyAddChild("child-through-link"));
 
         sm.commit();
 
+        assertEquals(1, countOut(parentRid, "OnlyAddParent_items"));
+    }
+
+    @Test
+    public void testOnlyAddWithAttributeThroughLoadedLinkWithStoredChild() {
+        OnlyAddHolder holder = sm.store(new OnlyAddHolder(new OnlyAddParent()));
+        sm.commit();
+
+        String parentRid = sm.getRID(holder.getParent());
+        String holderRid = sm.getRID(holder);
+        sm.getCurrentTransaction().clearCache();
+
+        OnlyAddHolder reloaded = sm.get(OnlyAddHolder.class, holderRid);
+        OnlyAddChild child = sm.store(new OnlyAddChild("stored-child-through-link"));
+        reloaded.addItemToParent(child);
+
+        sm.commit();
+
+        assertEquals(1, countOut(parentRid, "OnlyAddParent_items"));
+    }
+
+    @Test
+    public void testOnlyAddWithAttributeThroughLazyNewLink() {
+        OnlyAddHolder holder = sm.store(new OnlyAddHolder());
+        sm.commit();
+
+        String holderRid = sm.getRID(holder);
+        sm.getCurrentTransaction().clearCache();
+
+        OnlyAddHolder reloaded = sm.get(OnlyAddHolder.class, holderRid);
+        OnlyAddChild child = sm.store(new OnlyAddChild("child-through-lazy-link"));
+        reloaded.addItemToLazyParent(child);
+
+        sm.commit();
+
+        String parentRid = sm.getRID(reloaded.getParent());
+        assertEquals(1, countOut(holderRid, "OnlyAddHolder_parent"));
+        assertEquals(1, countOut(parentRid, "OnlyAddParent_items"));
+        assertEquals(0, reloaded.getParent().getNewItems().size());
+
+        sm.commit();
+
+        assertEquals(1, countOut(parentRid, "OnlyAddParent_items"));
+    }
+
+    @Test
+    public void testOnlyAddWithAttributeThroughGetterCreatedLink() {
+        OnlyAddHolder holder = sm.store(new OnlyAddHolder());
+        sm.commit();
+
+        String holderRid = sm.getRID(holder);
+        sm.getCurrentTransaction().clearCache();
+
+        OnlyAddHolder reloaded = sm.get(OnlyAddHolder.class, holderRid);
+        OnlyAddChild child = sm.store(new OnlyAddChild("child-through-getter"));
+        reloaded.addItemThroughGetter(child);
+
+        sm.commit();
+
+        String parentRid = sm.getRID(reloaded.getParent());
+        assertEquals(1, countOut(holderRid, "OnlyAddHolder_parent"));
+        assertEquals(1, countOut(parentRid, "OnlyAddParent_items"));
+    }
+
+    @Test
+    public void testOnlyAddAfterTransientDirtyMarkWasCleared() {
+        OnlyAddHolder holder = sm.store(new OnlyAddHolder());
+        sm.commit();
+
+        String holderRid = sm.getRID(holder);
+        sm.getCurrentTransaction().clearCache();
+
+        OnlyAddHolder reloaded = sm.get(OnlyAddHolder.class, holderRid);
+        reloaded.setInherited(Collections.singletonList("transient-login-data"));
+        ((IObjectProxy) reloaded).___removeDirtyMark();
+
+        OnlyAddChild child = sm.store(new OnlyAddChild("child-after-cleared-transient"));
+        reloaded.addItemThroughGetter(child);
+
+        sm.commit();
+
+        String parentRid = sm.getRID(reloaded.getParent());
+        assertEquals(1, countOut(holderRid, "OnlyAddHolder_parent"));
         assertEquals(1, countOut(parentRid, "OnlyAddParent_items"));
     }
 
