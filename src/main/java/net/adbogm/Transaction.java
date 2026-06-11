@@ -1620,10 +1620,10 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
         if (retVal.isEmpty()) {
             retVal = or.getPropertyNames().iterator().next();
         }
-        int ret = or.getProperty(retVal);
+        Number ret = or.getProperty(retVal);
         ors.close();
         //closeInternalTx();
-        return ret;
+        return ret.longValue();
     }
 
     /**
