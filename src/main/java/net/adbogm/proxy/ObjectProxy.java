@@ -326,7 +326,8 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                         res = superMethod.invoke(target, args);
                     }
                 } catch (InvocationTargetException ex) {
-                    throw ex.getCause();
+                    Throwable cause = ex.getCause();
+                    throw cause != null ? cause : ex;
                 }
                 // verificar si hay diferencias entre los objetos dependiendo de la estrategia seleccionada.
                 if (this.___objectReady) {
