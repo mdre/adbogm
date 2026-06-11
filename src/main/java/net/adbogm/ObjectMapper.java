@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -281,16 +282,7 @@ public class ObjectMapper {
                 LOGGER.log(Level.TRACE, "Buscando campo {} de tipo {}...",
                         prop, entry.getValue().getSimpleName());
                 
-                if (entry.getValue().isAssignableFrom(Float.class))
-                    this.setFieldValue(proxy, prop, v.getFloat(prop));
-                else if (entry.getValue().isAssignableFrom(Date.class))
-                    this.setFieldValue(proxy, prop, v.getDate(prop));
-                else if (entry.getValue().isAssignableFrom(LocalDate.class))
-                    this.setFieldValue(proxy, prop, v.getLocalDate(prop));
-                else if (entry.getValue().isAssignableFrom(LocalDateTime.class))
-                    this.setFieldValue(proxy, prop, v.getLocalDateTime(prop));
-                else
-                    this.setFieldValue(proxy, prop, v.get(prop));
+                this.setFieldValue(proxy, prop, getTypedDocumentValue(v, prop, entry.getValue()));
                     
             }
         }
@@ -655,7 +647,7 @@ public class ObjectMapper {
                 // y la clave podría no corresponderse con un campo.
                 Class<?> fc = classdef.fields.get(prop);
                 if (fc != null) {
-                    setFieldValue(oproxied, f, value);
+                    setFieldValue(oproxied, f, getTypedDocumentValue(e, prop, fc));
                 } else {
                     fc = classdef.enumFields.get(prop);
                     if (fc != null) {
@@ -665,6 +657,28 @@ public class ObjectMapper {
             }
         }
         return oproxied;
+    }
+
+    private Object getTypedDocumentValue(Document document, String prop, Class<?> targetType) {
+        if (targetType.isAssignableFrom(Float.class))
+            return document.getFloat(prop);
+        if (targetType.isAssignableFrom(Date.class))
+            return document.getDate(prop);
+        if (targetType.isAssignableFrom(LocalDate.class))
+            return document.getLocalDate(prop);
+        if (targetType.isAssignableFrom(LocalDateTime.class))
+            return document.getLocalDateTime(prop);
+        return document.get(prop);
+    }
+
+    private Object adaptValueForField(Object value, Class<?> targetType) {
+        if (value == null || !Date.class.isAssignableFrom(targetType))
+            return value;
+        if (value instanceof LocalDateTime localDateTime)
+            return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+        if (value instanceof LocalDate localDate)
+            return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        return value;
     }
 
     
@@ -679,7 +693,7 @@ public class ObjectMapper {
     
     public void setFieldValue(Object o, Field field, Object value) {
         try {
-            field.set(o, value);
+            field.set(o, adaptValueForField(value, field.getType()));
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             LOGGER.log(Level.ERROR, "Error setting value for " + field,ex);
         }
@@ -690,7 +704,7 @@ public class ObjectMapper {
         Field f = this.classCache.get(o.getClass()).fieldsObject.get(field);
         LOGGER.log(Level.TRACE, "field f: {} - type: {} - value type: {}",new Object[]{f.getName(),f.getType(),(value!=null?value.getClass():"NULL")});
         try {
-            f.set(o, value);
+            f.set(o, adaptValueForField(value, f.getType()));
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             LOGGER.log(Level.ERROR, "Error setting value for " + f,ex);
         }
