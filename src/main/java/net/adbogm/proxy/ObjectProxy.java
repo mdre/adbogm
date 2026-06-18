@@ -171,7 +171,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                         return superMethod.invoke(target, args);
                     }
                 default:
-                    throw new ObjectMarkedAsDeleted("The object " + this.___baseElement.getIdentity().toString()
+                    throw new ObjectMarkedAsDeleted("The object " + this.___getRid()
                             + " was deleted from the database. Trying to call to " + method.getName());
             }
         }
@@ -291,7 +291,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                         //if object doesn't have toString defined, we implement one on the fly
                         ReflectionUtils.findMethod(this.___baseClass, "toString", (Class<?>[]) null);
                     } catch (NoSuchMethodException nsme) {
-                        res = this.___baseElement.getIdentity().toString(); //returns rid
+                        res = this.___getRid(); //returns rid
                         break;
                     }
                 }
@@ -343,6 +343,15 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                 }
                 break;
         }
+        // if the Object has no RID, but reach this point means that could by rolled back by a transaction exception, but not 
+        // for an explicity call to the rollback() method, so save it again to recover a valid RID.
+        if ((this.___isValidObject)&&(this.___baseElement.getIdentity() == null)) {
+            if (!this.___transaction.getCurrentGraphDb().isTransactionActive()) {
+                this.___transaction.begin();
+            }
+            this.___baseElement.modify().save();
+        }
+        
         // return the result
         LOGGER.log(Level.TRACE, "<<<<<<<<<<<<<<<<<<<<< INTERCEPT END: " + debugLabel);
         return res;
@@ -433,11 +442,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
      */
     @Override
     public String ___getRid() {
-        if (this.___baseElement != null) {
-            return this.___baseElement.getIdentity().toString();
-        } else {
-            return null;
-        }
+        return (this.___baseElement.getIdentity() != null)?this.___baseElement.getIdentity().toString():null;
     }
 
     /**
@@ -773,7 +778,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
         LOGGER.log(Level.DEBUG, "Iniciando ___commit() ....");
         LOGGER.log(Level.DEBUG, "valid: {}", this.___isValidObject);
         LOGGER.log(Level.DEBUG, "dirty: {}", this.___dirty);
-        LOGGER.log(Level.DEBUG, "rid: {}", this.___baseElement.getIdentity());
+        LOGGER.log(Level.DEBUG, "rid: {}", this.___getRid());
         LOGGER.log(Level.DEBUG, "modified fields: {}", ((ITransparentDirtyDetector) this.___proxiedObject).___tdd___getModifiedFields());
 
         if (this.___dirty) {
@@ -784,17 +789,28 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
             // obtener un mapa actualizado del objeto contenido
             ObjectStruct oStruct = this.___transaction.getObjectMapper().objectStruct(this.___proxiedObject);
             Map<String, Object> omap = oStruct.fields;
-
+            LOGGER.log(Level.TRACE, "oStruct fields -> omap: " + omap);
             if (!this.___isNew()) {
                 //dejar solo los campos que se hayan modificado
                 LOGGER.log(Level.DEBUG, "modified fields: " + String.join(", ", ((ITransparentDirtyDetector) this.___proxiedObject).___tdd___getModifiedFields()));
                 Set<String> retainFields = ((ITransparentDirtyDetector) this.___proxiedObject).___tdd___getModifiedFields();
-                // agregar los fields que son enums dado que se tratan como campos pero no reaccionan la TDD porque no hay forma de notifiarlos
-                retainFields.addAll(cDef.enumCollectionFields.keySet());
+                // agregar los fields que son enums dado que se tratan como campos pero no reaccionan la TDD porque no hay forma de notificarlos
+//                retainFields.addAll(cDef.enumCollectionFields.keySet());
+                LOGGER.log(Level.TRACE, "retainFields: " + retainFields);
                 omap.keySet().retainAll(retainFields);
+                
+                retainFields.stream()
+                    .filter(cDef.fields::containsKey)
+                    .forEach(field -> omap.put(field, oStruct.fields.get(field)));
+                
+                retainFields.stream()
+                    .filter(cDef.enumFields::containsKey)
+                    .forEach(field -> omap.put(field, oStruct.fields.get(field)));
+                
             }
-
-            LOGGER.log(Level.DEBUG, "omap: " + omap);
+            
+            
+            LOGGER.log(Level.DEBUG, "retain fields -> omap: " + omap);
 
             // bajar todo al vértice
             VertexUtils.fillElement(this.___baseElement, omap);
@@ -997,7 +1013,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
 
                                         // vincular el nodo
                                         //MutableEdge oe = this.___transaction.getCurrentGraphDb().addEdge("class:" + graphRelationName, this.___getVertex(), ((IObjectProxy) colObject).___getVertex(), graphRelationName);
-                                        LOGGER.log(Level.TRACE, "creando nueve edge {} --> {}", this.___baseElement.getIdentity().toString(),
+                                        LOGGER.log(Level.TRACE, "creando nueve edge {} --> {}", this.___getRid(),
                                                 ((IObjectProxy) colObject).___getVertex().getIdentity().toString()
                                         );
                                         MutableEdge oe = this.___getVertex().newEdge(graphRelationName, ((IObjectProxy) colObject).___getVertex());
@@ -1285,13 +1301,13 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
      */
     @Override
     public synchronized void ___rollback() {
-        LOGGER.log(Level.DEBUG, "\n\n******************* ROLLBACK: {} *******************\n\n",this.___baseElement.getIdentity().toString());
+        LOGGER.log(Level.DEBUG, "\n\n******************* ROLLBACK: {} *******************\n\n",this.___getRid());
         LOGGER.log(Level.TRACE, ThreadHelper.getCurrentStackTrace());
 
 //        this.___transaction.initInternalTx();
         // si es un objeto nuevo
 //        boolean isNew = this.___baseElement.getIdentity().isNew();
-        LOGGER.log(Level.DEBUG, "RID: {} Nueva?: {}", new Object[]{this.___baseElement.getIdentity().toString(), ___isNew});
+        LOGGER.log(Level.DEBUG, "RID: {} Nueva?: {}", new Object[]{this.___baseElement, ___isNew});
         if (___isNew) {
             // invalidar el objeto
             LOGGER.log(Level.DEBUG, "El objeto aún no se ha persistido en la base. Invalidar");

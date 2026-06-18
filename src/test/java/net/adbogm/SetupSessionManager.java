@@ -1,7 +1,6 @@
 package net.adbogm;
 
 
-import net.adbogm.SessionManager;
 import test.TestConfig;
 
 /*
@@ -15,7 +14,7 @@ import test.TestConfig;
  */
 public class SetupSessionManager {
     public static SessionManager getSessionManager() {
-        boolean grpc = false;
+        boolean grpc = true;
         SessionManager sm = null;
         if (grpc) {
             sm =new SessionManager(TestConfig.TESTSERVER,TestConfig.TESTGRPCDBPORT, TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS, true);
@@ -23,14 +22,17 @@ public class SetupSessionManager {
             sm  = new SessionManager(TestConfig.TESTSERVER, TestConfig.TESTDBPORT,TestConfig.TESTDB, TestConfig.TESTDBUSER, TestConfig.TESTDBPASS);
         }
 
-//        sm.setClassLevelLog(TransparentDirtyDetectorInstrumentator.class, Level.FINER)
+        
+//        sm
+//          .setClassLevelLog(TransparentDirtyDetectorInstrumentator.class, Level.FINER)
 //            .setClassLevelLog(ObjectProxy.class, Level.FINEST)
 //            .setClassLevelLog(ClassCache.class, Level.FINER)
-//            .setClassLevelLog(Transaction.class, Level.FINEST)
+//            .setClassLevelLog(Transaction.class, Level.TRACE)
 //            .setClassLevelLog(ObjectProxy.class, Level.TRACE)
 //            .setClassLevelLog(SimpleCache.class, Level.FINER)
-//            .setClassLevelLog(ArrayListLazyProxy.class, Level.FINER)
-//            .setClassLevelLog(ObjectMapper.class, Level.FINEST)
+//            .setClassLevelLog(ArrayListLazyProxy.class, Level.TRACE)
+//            .setClassLevelLog(ObjectMapper.class, Level.TRACE)
+//            .setClassLevelLog(VertexUtils.class, Level.TRACE)
 //            .setClassLevelLog(SObject.class, Level.FINER)
 //            .setClassLevelLog(TransparentDirtyDetectorInstrumentator.class, Level.INFO)
 //        ;

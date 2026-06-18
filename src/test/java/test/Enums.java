@@ -54,4 +54,7 @@ public class Enums {
         this.enums = null;
     }
     
+    public void enumsAdd(EnumTest e) {
+        this.enums.add(e);
+    }
 }

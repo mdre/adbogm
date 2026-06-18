@@ -470,10 +470,8 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
         if (this.arcadedbTransact.isTransactionActive()) {
             this.arcadedbTransact.rollback();
         }
-         
         
         // refrescar todos los objetos
-        LOGGER.log(Level.TRACE, "dirty objects: "+dirty);
         for (Map.Entry<String, Object> entry : dirty.entrySet()) {
             IObjectProxy value = (IObjectProxy) entry.getValue();
             value.___rollback();

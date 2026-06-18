@@ -81,8 +81,10 @@ public class VertexUtils {
      * @param omap  pares de valores con el nombre de los campos y los valores a asignar.
      */
     public static void fillElement(Record oRecord, Map<String,Object> omap) {
+        
         MutableDocument mRec = oRecord.asDocument().modify();
         omap.entrySet().stream().forEach(entry->{
+            LOGGER.log(Level.TRACE, "field: {} old val: {}  --> new val: {}", new Object[]{entry.getKey(), mRec.get(entry.getKey()), entry.getValue()});
             mRec.set(entry.getKey(), entry.getValue());
         });
     }

@@ -16,6 +16,7 @@ import com.arcadedb.graph.Vertex.DIRECTION;
 
 import net.adbogm.Primitives;
 import net.adbogm.Transaction;
+import net.dirtydetector.agent.ITransparentDirtyDetector;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -216,6 +217,7 @@ public class HashMapLazyProxy extends HashMap<Object, Object> implements ILazyMa
             // si el padre no está marcado como garbage, notificarle el cambio de la colección.
             if (this.parent.get() != null) {
                 this.parent.get().___setDirty();
+                ((ITransparentDirtyDetector)this.parent.get().___getProxiedObject()).___tdd___addModifiedField(field);
             }
         }
     }

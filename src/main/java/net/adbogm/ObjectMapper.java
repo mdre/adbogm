@@ -173,6 +173,7 @@ public class ObjectMapper {
         classmap.enumFields.entrySet().stream().forEach(entry -> {
             Field f = classmap.fieldsObject.get(entry.getKey());
             boolean put = putValue(oStruct.fields, f, o, v -> ((Enum)v).name());
+//            boolean put = putValue(oStruct.fields, f, o, v -> v!=null?((Enum)v).name():null);
             if (!put) oStruct.removedProperties.add(entry.getKey());
         });
         
@@ -406,7 +407,7 @@ public class ObjectMapper {
                         enumList.add(Enum.valueOf(listClass.asSubclass(Enum.class), sVal));
                     }
                 }
-                setFieldValue(proxy, prop, new ArrayListEmbeddedProxy(proxy, enumList));
+                setFieldValue(proxy, prop, new ArrayListEmbeddedProxy(proxy, prop, enumList));
             } else {
                 /* if the node doesn't have a value, respect the initial value of the attribute
                  * in the class:
@@ -414,7 +415,7 @@ public class ObjectMapper {
                  * empty list -> empty proxy list
                  */
                 if (getFieldValue(proxy, f) != null) {
-                    setFieldValue(proxy, f, new ArrayListEmbeddedProxy(proxy, new ArrayList()));
+                    setFieldValue(proxy, f, new ArrayListEmbeddedProxy(proxy, prop, new ArrayList()));
                 } else {
                     setFieldValue(proxy, prop, null);
                 }
@@ -585,10 +586,10 @@ public class ObjectMapper {
             // realizar la conversión solo si el campo tiene un valor.
             if (value != null && List.class.isAssignableFrom(f.getType())) {
                 LOGGER.log(Level.TRACE, "convirtiendo en ArrayListEmbeddedProxy...");
-                f.set(o, new ArrayListEmbeddedProxy((IObjectProxy)o, (List)value));
+                f.set(o, new ArrayListEmbeddedProxy((IObjectProxy)o, f.getName(), (List)value));
             } else if (value != null && Map.class.isAssignableFrom(f.getType())) {
                 LOGGER.log(Level.TRACE, "convirtiendo en HashMapEmbeddedProxy");
-                f.set(o, new HashMapEmbeddedProxy((IObjectProxy)o, (Map)value));
+                f.set(o, new HashMapEmbeddedProxy((IObjectProxy)o, f.getName(), (Map)value));
             }
         } catch (IllegalArgumentException | IllegalAccessException ex) {
              LOGGER.log(Level.ERROR, "Error converting collections to embedded",ex);
@@ -604,10 +605,10 @@ public class ObjectMapper {
             // realizar la conversión solo si el campo tiene un valor.
             if (List.class.isAssignableFrom(f.getType())) {
                 LOGGER.log(Level.TRACE, "converting into empty ArrayListEmbeddedProxy...");
-                f.set(o, new ArrayListEmbeddedProxy((IObjectProxy)o, new ArrayList()));
+                f.set(o, new ArrayListEmbeddedProxy((IObjectProxy)o, f.getName(), new ArrayList()));
             } else if (Map.class.isAssignableFrom(f.getType())) {
                 LOGGER.log(Level.TRACE, "converting into empty HashMapEmbeddedProxy...");
-                f.set(o, new HashMapEmbeddedProxy((IObjectProxy)o, new HashMap()));
+                f.set(o, new HashMapEmbeddedProxy((IObjectProxy)o, f.getName(), new HashMap()));
             }
         } catch (IllegalArgumentException | IllegalAccessException ex) {
              LOGGER.log(Level.ERROR, "Error converting collections to embedded",ex);

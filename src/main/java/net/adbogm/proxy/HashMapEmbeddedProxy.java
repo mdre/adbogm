@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import net.adbogm.utils.ThreadHelper;
+import net.dirtydetector.agent.ITransparentDirtyDetector;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +35,7 @@ public class HashMapEmbeddedProxy extends HashMap<Object, Object> implements IEm
     
     // referencia devil al objeto padre. Se usa para notificar al padre que la colección ha cambiado.
     private WeakReference<IObjectProxy> parent;
+    private String field; // the field 
     
     /**
      * Crea un HashMap con detección de cambios.
@@ -41,8 +43,9 @@ public class HashMapEmbeddedProxy extends HashMap<Object, Object> implements IEm
      * @param parent link al padre
      */
     @Override
-    public void init(IObjectProxy parent) {
+    public void init(IObjectProxy parent, String field) {
         this.parent = new WeakReference<>(parent);
+        this.field = field;
     }
 
     
@@ -52,7 +55,7 @@ public class HashMapEmbeddedProxy extends HashMap<Object, Object> implements IEm
         // si el padre no está marcado como garbage, notificarle el cambio de la colección.
         if (this.parent.get()!=null) {
             this.parent.get().___setDirty();
-            
+            ((ITransparentDirtyDetector)this.parent.get().___getProxiedObject()).___tdd___addModifiedField(field);
             LOGGER.log(Level.DEBUG, ThreadHelper.getCurrentStackTrace());
         }
     }
@@ -66,14 +69,14 @@ public class HashMapEmbeddedProxy extends HashMap<Object, Object> implements IEm
         super();
     }
 
-    public HashMapEmbeddedProxy(IObjectProxy parent) {
+    public HashMapEmbeddedProxy(IObjectProxy parent, String field) {
         super();
-        this.init(parent);
+        this.init(parent, field);
     }
     
-    public HashMapEmbeddedProxy(IObjectProxy parent, Map source) {
+    public HashMapEmbeddedProxy(IObjectProxy parent, String field, Map source) {
         super(source);
-        this.init(parent);
+        this.init(parent, field);
     }
 
     

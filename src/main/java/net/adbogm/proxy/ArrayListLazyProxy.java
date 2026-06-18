@@ -22,6 +22,7 @@ import com.arcadedb.graph.Vertex.DIRECTION;
 import net.adbogm.Transaction;
 import net.adbogm.exceptions.RelatedToNullException;
 import net.adbogm.utils.ThreadHelper;
+import net.dirtydetector.agent.ITransparentDirtyDetector;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -147,8 +148,6 @@ public class ArrayListLazyProxy extends ArrayList implements ILazyCollectionCall
         }
     }
     
-    
-    
     private synchronized void setDirty() {
         // Si es una colección sobre una dirección saliente proceder a marcar
         // en caso contrario se la considera como un Indirect no NO REPORTA 
@@ -160,7 +159,7 @@ public class ArrayListLazyProxy extends ArrayList implements ILazyCollectionCall
             // si el padre no está marcado como garbage, notificarle el cambio de la colección.
             if (this.parent.get() != null) {
                 this.parent.get().___setDirty();
-
+                ((ITransparentDirtyDetector)this.parent.get().___getProxiedObject()).___tdd___addModifiedField(field);
                 LOGGER.log(Level.DEBUG, ThreadHelper.getCurrentStackTrace());
             }
         }

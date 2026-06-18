@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import net.adbogm.utils.ThreadHelper;
+import net.dirtydetector.agent.ITransparentDirtyDetector;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,16 +31,19 @@ public class ArrayListEmbeddedProxy extends ArrayList implements IEmbeddedCalls 
 //    }
     // referencia debil al objeto padre. Se usa para notificar al padre que la colección ha cambiado.
     private WeakReference<IObjectProxy> parent;
+    private String field; // the field bound to this AL
     
     /**
      * Crea un ArrayList embebido.
      *
      * @param parent Vínculo al objeto que contiene la colección
+     * @param field field bound to this collections.
      */
     @Override
-    public synchronized void init(IObjectProxy parent) {
+    public synchronized void init(IObjectProxy parent, String field) {
         try {
             this.parent = new WeakReference<>(parent);
+            this.field = field;
         } catch (Exception ex) {
             LOGGER.log(Level.ERROR, "ERROR",ex);
         }
@@ -52,7 +56,7 @@ public class ArrayListEmbeddedProxy extends ArrayList implements IEmbeddedCalls 
         // si el padre no está marcado como garbage, notificarle el cambio de la colección.
         if (this.parent.get()!=null) {
             this.parent.get().___setDirty();
-            
+            ((ITransparentDirtyDetector)this.parent.get().___getProxiedObject()).___tdd___addModifiedField(field);
             LOGGER.log(Level.DEBUG, ThreadHelper.getCurrentStackTrace());
         }
     }
@@ -63,15 +67,15 @@ public class ArrayListEmbeddedProxy extends ArrayList implements IEmbeddedCalls 
         super();
     }
     
-    public ArrayListEmbeddedProxy(IObjectProxy parent) {
+    public ArrayListEmbeddedProxy(IObjectProxy parent, String field) {
         super();
-        this.init(parent);
+        this.init(parent, field);
     }
     
     
-    public ArrayListEmbeddedProxy(IObjectProxy parent, List l) {
+    public ArrayListEmbeddedProxy(IObjectProxy parent, String field, List l) {
         super(l);
-        this.init(parent);
+        this.init(parent, field);
     }
 
 

@@ -91,6 +91,7 @@ public class SimpleVertex {
         this.oF = 1.1f;
         this.oB = true;
         this.uuid = UUID.randomUUID().toString();
+        this.fecha = LocalDateTime.now();
     }
     
     public SimpleVertex(String s) {

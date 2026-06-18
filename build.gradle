@@ -22,7 +22,7 @@ plugins {
 // Versión de ArcadeDB
 // ============================================================
 //ext.arcadeDbVersion = '26.5.1'
-ext.arcadeDbVersion = '26.6.1-SNAPSHOT'
+ext.arcadeDbVersion = '26.7.1-SNAPSHOT'
 
 
 // ============================================================

@@ -128,17 +128,17 @@ public class QueryTest {
      */
     @Test
     public void listQuery() throws Exception {
-        Foo foo = new Foo("test query");
+        Foo foo = new Foo("test list query");
         foo.add(new SimpleVertex("related vertex"));
-        sm.store(foo); //debe ir en los resultados
+        foo = sm.store(foo); //debe ir en los resultados
         sm.store(new Foo("excluded")); //no debe ir en los resultados
         sm.commit();
         sm.getCurrentTransaction().clearCache();
         
-        List<Foo> res = sm.query(Foo.class, "where text = 'test query'");
+        List<Foo> res = sm.query(Foo.class, "where text = 'test list query'");
         assertFalse(res.isEmpty());
         for (Foo f : res) {
-            assertEquals("test query", f.getText());
+            assertEquals("test list query", f.getText());
             SimpleVertex sv = f.getLsve().iterator().next();
             assertEquals("related vertex", sv.getS());
         }

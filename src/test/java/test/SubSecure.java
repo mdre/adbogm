@@ -21,6 +21,10 @@ public class SubSecure {
     public SubSecure() {
     }
 
+    public void aListAdd(SimpleVertex s) {
+        this.aList.add(s);
+    }
+    
     public Secure getOwner() {
         return owner;
     }

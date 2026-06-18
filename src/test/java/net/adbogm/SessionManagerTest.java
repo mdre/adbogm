@@ -1025,9 +1025,10 @@ public class SessionManagerTest {
         e = sm.get(Enums.class, rid);
         assertEquals(EnumTest.TRES, e.getTheEnum());
         
-        
+        LOGGER.log(Level.INFO, "\n\n\n\n\nNull ENUM <<<<<<<<<<<<<<<<<<<<<<<<<<<<");
         e.setTheEnum(null);
         sm.commit();
+        LOGGER.log(Level.INFO, "\n\n\n\n\nNull ENUM FIN commit <<<<<<<<<<<<<<<<<<<<<<<<<<<<");
         sm.getCurrentTransaction().clearCache();
         e = sm.get(Enums.class, rid);
         assertNull(e.getTheEnum());
@@ -1151,7 +1152,8 @@ public class SessionManagerTest {
 
         //modify the fields
         stored.setS("Before rollback");
-        stored.subs.iterator().next().aList.add(new SimpleVertex());
+//        stored.subs.iterator().next().aList.add(new SimpleVertex());
+        stored.subs.iterator().next().aListAdd(new SimpleVertex());
         stored.subs.add(new SubSecure());
         System.out.println("Before rollback:  ");
         System.out.println("    rid: "+((IObjectProxy)stored).___getRid());
@@ -2641,7 +2643,7 @@ public class SessionManagerTest {
             sm.commit();
             fail("NO SE CAPTURÓ LA DUPLICIDAD DEL UUID");
         } catch (Exception ex) {
-            LOGGER.info("Todo ok. Solucionar el problema de la duplicidad");
+            LOGGER.info("\n\n\nTodo ok. Solucionar el problema de la duplicidad\n\n\n");
             svDup.setUuid(svdupUUID);
         }
         //comprobar que no se borró todavía de la base
@@ -2789,7 +2791,7 @@ public class SessionManagerTest {
         sm.commit();
         String rid = sm.getRID(v);
         
-        v.enums.add(EnumTest.TRES);
+        v.enumsAdd(EnumTest.TRES);
         assertTrue(((IObjectProxy)v).___isDirty());
         sm.rollback();
         assertEquals(3, v.enums.size());
@@ -2806,6 +2808,11 @@ public class SessionManagerTest {
         v.enums.remove(EnumTest.OTRO_MAS);
         assertEquals(2, v.enums.size());
         assertTrue(((IObjectProxy)v).___isDirty());
+        
+        LOGGER.log(Level.INFO, "\n\n\n\n\n\nPrecomit modified fields: {}",((ITransparentDirtyDetector)v).___tdd___getModifiedFields());
+        LOGGER.log(Level.INFO, "v class: {}  -- enums class: {}",new Object[]{v.getClass().getName(), v.enums.getClass().getName()});
+        
+        LOGGER.log(Level.INFO, "\n\n\n\n\n\nPrecomit rid: {}",rid);
         v = commitClearAndGet(rid);
         assertEquals(2, v.enums.size());
         
@@ -3152,11 +3159,14 @@ public class SessionManagerTest {
         sm.commit();
         String rid = sm.getRID(sv);
         System.out.println("RID: "+rid);
+        
+        LOGGER.log(Level.INFO, "\n\n\nSet value to NULL <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
         sv.setS(null);
         sv.setFecha(null);
         sv.setLooptest(null);
         assertTrue(((IObjectProxy)sv).___isDirty());
         sm.commit();
+        LOGGER.log(Level.INFO, "\n\n\nFin commit NULL <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
         sm.getCurrentTransaction().clearCache();
         sv = sm.get(SimpleVertexEx.class, rid);
         assertNull(sv.getS());
