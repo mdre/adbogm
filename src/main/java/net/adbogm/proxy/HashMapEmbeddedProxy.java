@@ -35,7 +35,7 @@ public class HashMapEmbeddedProxy extends HashMap<Object, Object> implements IEm
     
     // referencia devil al objeto padre. Se usa para notificar al padre que la colección ha cambiado.
     private WeakReference<IObjectProxy> parent;
-    private String field; // the field 
+    private String fieldName;
     
     /**
      * Crea un HashMap con detección de cambios.
@@ -43,9 +43,14 @@ public class HashMapEmbeddedProxy extends HashMap<Object, Object> implements IEm
      * @param parent link al padre
      */
     @Override
-    public void init(IObjectProxy parent, String field) {
+    public void init(IObjectProxy parent) {
+        this.init(parent, null);
+    }
+
+    @Override
+    public void init(IObjectProxy parent, String fieldName) {
         this.parent = new WeakReference<>(parent);
-        this.field = field;
+        this.fieldName = fieldName;
     }
 
     
@@ -53,10 +58,25 @@ public class HashMapEmbeddedProxy extends HashMap<Object, Object> implements IEm
         LOGGER.log(Level.DEBUG, "Colección marcada como Dirty. Avisar al padre.");
         LOGGER.log(Level.DEBUG, "weak:"+this.parent.get());
         // si el padre no está marcado como garbage, notificarle el cambio de la colección.
-        if (this.parent.get()!=null) {
-            this.parent.get().___setDirty();
-            ((ITransparentDirtyDetector)this.parent.get().___getProxiedObject()).___tdd___addModifiedField(field);
+        IObjectProxy parentObject = this.parent.get();
+        if (parentObject != null) {
+            markModifiedField(parentObject);
+            parentObject.___setDirty();
+
             LOGGER.log(Level.DEBUG, ThreadHelper.getCurrentStackTrace());
+        }
+    }
+
+    private void markModifiedField(IObjectProxy parentObject) {
+        if (this.fieldName == null) {
+            return;
+        }
+        if (parentObject instanceof ITransparentDirtyDetector detector) {
+            detector.___tdd___addModifiedField(this.fieldName);
+        }
+        Object proxiedObject = parentObject.___getProxiedObject();
+        if (proxiedObject instanceof ITransparentDirtyDetector detector) {
+            detector.___tdd___addModifiedField(this.fieldName);
         }
     }
     
@@ -69,14 +89,24 @@ public class HashMapEmbeddedProxy extends HashMap<Object, Object> implements IEm
         super();
     }
 
-    public HashMapEmbeddedProxy(IObjectProxy parent, String field) {
+    public HashMapEmbeddedProxy(IObjectProxy parent) {
         super();
-        this.init(parent, field);
+        this.init(parent);
+    }
+
+    public HashMapEmbeddedProxy(IObjectProxy parent, String fieldName) {
+        super();
+        this.init(parent, fieldName);
     }
     
-    public HashMapEmbeddedProxy(IObjectProxy parent, String field, Map source) {
+    public HashMapEmbeddedProxy(IObjectProxy parent, Map source) {
         super(source);
-        this.init(parent, field);
+        this.init(parent);
+    }
+
+    public HashMapEmbeddedProxy(IObjectProxy parent, Map source, String fieldName) {
+        super(source);
+        this.init(parent, fieldName);
     }
 
     

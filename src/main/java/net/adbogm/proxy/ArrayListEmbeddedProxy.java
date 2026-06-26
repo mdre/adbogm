@@ -31,19 +31,23 @@ public class ArrayListEmbeddedProxy extends ArrayList implements IEmbeddedCalls 
 //    }
     // referencia debil al objeto padre. Se usa para notificar al padre que la colección ha cambiado.
     private WeakReference<IObjectProxy> parent;
-    private String field; // the field bound to this AL
+    private String fieldName;
     
     /**
      * Crea un ArrayList embebido.
      *
      * @param parent Vínculo al objeto que contiene la colección
-     * @param field field bound to this collections.
      */
     @Override
-    public synchronized void init(IObjectProxy parent, String field) {
+    public synchronized void init(IObjectProxy parent) {
+        this.init(parent, null);
+    }
+
+    @Override
+    public synchronized void init(IObjectProxy parent, String fieldName) {
         try {
             this.parent = new WeakReference<>(parent);
-            this.field = field;
+            this.fieldName = fieldName;
         } catch (Exception ex) {
             LOGGER.log(Level.ERROR, "ERROR",ex);
         }
@@ -54,10 +58,25 @@ public class ArrayListEmbeddedProxy extends ArrayList implements IEmbeddedCalls 
         LOGGER.log(Level.DEBUG, "Colección marcada como Dirty. Avisar al padre.");
         LOGGER.log(Level.DEBUG, "weak:"+this.parent.get());
         // si el padre no está marcado como garbage, notificarle el cambio de la colección.
-        if (this.parent.get()!=null) {
-            this.parent.get().___setDirty();
-            ((ITransparentDirtyDetector)this.parent.get().___getProxiedObject()).___tdd___addModifiedField(field);
+        IObjectProxy parentObject = this.parent.get();
+        if (parentObject != null) {
+            markModifiedField(parentObject);
+            parentObject.___setDirty();
+
             LOGGER.log(Level.DEBUG, ThreadHelper.getCurrentStackTrace());
+        }
+    }
+
+    private void markModifiedField(IObjectProxy parentObject) {
+        if (this.fieldName == null) {
+            return;
+        }
+        if (parentObject instanceof ITransparentDirtyDetector detector) {
+            detector.___tdd___addModifiedField(this.fieldName);
+        }
+        Object proxiedObject = parentObject.___getProxiedObject();
+        if (proxiedObject instanceof ITransparentDirtyDetector detector) {
+            detector.___tdd___addModifiedField(this.fieldName);
         }
     }
     
@@ -67,15 +86,24 @@ public class ArrayListEmbeddedProxy extends ArrayList implements IEmbeddedCalls 
         super();
     }
     
-    public ArrayListEmbeddedProxy(IObjectProxy parent, String field) {
+    public ArrayListEmbeddedProxy(IObjectProxy parent) {
         super();
-        this.init(parent, field);
+        this.init(parent);
+    }
+
+    public ArrayListEmbeddedProxy(IObjectProxy parent, String fieldName) {
+        super();
+        this.init(parent, fieldName);
     }
     
-    
-    public ArrayListEmbeddedProxy(IObjectProxy parent, String field, List l) {
+    public ArrayListEmbeddedProxy(IObjectProxy parent, List l) {
         super(l);
-        this.init(parent, field);
+        this.init(parent);
+    }
+
+    public ArrayListEmbeddedProxy(IObjectProxy parent, List l, String fieldName) {
+        super(l);
+        this.init(parent, fieldName);
     }
 
 

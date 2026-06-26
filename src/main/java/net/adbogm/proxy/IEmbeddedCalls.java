@@ -10,5 +10,9 @@ package net.adbogm.proxy;
  * @author Marcelo D. Ré {@literal <marcelo.re@gmail.com>}
  */
 public interface IEmbeddedCalls {
-    public void init(IObjectProxy parent, String field);
+    public void init(IObjectProxy parent);
+
+    public default void init(IObjectProxy parent, String fieldName) {
+        init(parent);
+    }
 }

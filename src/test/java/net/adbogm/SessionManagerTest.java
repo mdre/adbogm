@@ -1350,6 +1350,33 @@ public class SessionManagerTest {
     }
 
     @Test
+    public void testEmbeddedProxyDirectMutationIsPersisted() {
+        LOGGER.info("\n\n\n");
+        LOGGER.info("***************************************************************");
+        LOGGER.info("Persist direct mutations over embedded collection proxies");
+        LOGGER.info("***************************************************************");
+
+        SimpleVertexWithEmbedded svemb = this.sm.store(new SimpleVertexWithEmbedded());
+        String rid = this.sm.getRID(svemb);
+        this.sm.commit();
+        this.sm.getCurrentTransaction().clearCache();
+
+        SimpleVertexWithEmbedded reloaded = this.sm.get(SimpleVertexWithEmbedded.class, rid);
+        reloaded.getStringlist().add("direct-list-value");
+        reloaded.getSimplemap().put("direct-map-key", 99);
+
+        assertEquals(1, sm.getDirtyCount());
+
+        this.sm.commit();
+        assertEquals(0, sm.getDirtyCount());
+        this.sm.getCurrentTransaction().clearCache();
+
+        SimpleVertexWithEmbedded persisted = this.sm.get(SimpleVertexWithEmbedded.class, rid);
+        assertTrue(persisted.getStringlist().contains("direct-list-value"));
+        assertEquals(Integer.valueOf(99), persisted.getSimplemap().get("direct-map-key"));
+    }
+
+    @Test
     public void testEmbeddedRollback() {
         LOGGER.info("\n\n\n");
         LOGGER.info("***************************************************************");
