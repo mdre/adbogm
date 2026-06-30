@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import net.adbogm.annotations.Entity;
 import net.adbogm.annotations.Ignore;
+import net.dirtydetector.agent.TDDIgnore;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +35,7 @@ public abstract class SObject {
      * 8: list
      */ 
     @Ignore
+    @TDDIgnore
     private int __state = 0;
     
     /** Para que herede los ACL de este otro objeto */
