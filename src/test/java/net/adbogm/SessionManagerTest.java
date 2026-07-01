@@ -152,7 +152,9 @@ public class SessionManagerTest {
 
         this.sm.commit();
         assertEquals(0, sm.getDirtyCount());
-
+        assertFalse(((IObjectProxy)result).___isDirty());
+        assertFalse(((ITransparentDirtyDetector)((IObjectProxy)result).___getProxiedObject()).___tdd___isDirty());
+        
         LOGGER.info("Recuperar el objeto de la base");
         String rid2 = ((IObjectProxy) result).___getRid();
         expResult = commitClearAndGet(rid2);
@@ -1143,24 +1145,33 @@ public class SessionManagerTest {
         sm.setClassLevelLog(Transaction.class, Level.TRACE);
 //        sm.setClassLevelLog(ArrayListLazyProxy.class, Level.TRACE);
         SubSecure ss = new SubSecure();
-        ss.aList.add(new SimpleVertex());
+        ss.aList.add(new SimpleVertex("este está ok"));
         Secure sec = new Secure("Secure vertex");
         sec.subs.add(ss);
 
         Secure stored = sm.store(sec);
         sm.commit();
 
+        assertTrue(sm.getCurrentTransaction().getDirty().size() == 0);
+        
+        System.out.println("dirty? "+((IObjectProxy)stored).___isDirty());
         //modify the fields
+        assertFalse(((IObjectProxy)stored).___isDirty());
+        assertFalse(((ITransparentDirtyDetector)stored).___tdd___isDirty());
         stored.setS("Before rollback");
+        assertTrue(((ITransparentDirtyDetector)stored).___tdd___isDirty());
+        assertEquals(1, sm.getCurrentTransaction().getDirty().size());
+        assertTrue(sm.getCurrentTransaction().getDirty().contains(stored));
 //        stored.subs.iterator().next().aList.add(new SimpleVertex());
-        stored.subs.iterator().next().aListAdd(new SimpleVertex());
+        stored.subs.iterator().next().aListAdd(new SimpleVertex("no debería existir porque se hace rollback"));
         stored.subs.add(new SubSecure());
-        System.out.println("Before rollback:  ");
-        System.out.println("    rid: "+((IObjectProxy)stored).___getRid());
-        System.out.println("    dirty: "+((IObjectProxy)stored).___isDirty());
-        System.out.println("    subs.size: "+stored.subs.size());
-        System.out.println("    subs class:" +stored.subs.getClass().getCanonicalName());
-        System.out.println("dirties: "+sm.getCurrentTransaction().getDirty().stream().map(o->((IObjectProxy)o).___getRid()).collect(Collectors.joining(", ")));
+        LOGGER.info("\n\n\n");
+        LOGGER.info("Before rollback:  ");
+        LOGGER.info("    rid: {}",((IObjectProxy)stored).___getRid());
+        LOGGER.info("    dirty: {}",((IObjectProxy)stored).___isDirty());
+        LOGGER.info("    subs.size: {}",stored.subs.size());
+        LOGGER.info("    subs class: {}",stored.subs.getClass().getCanonicalName());
+        LOGGER.info("dirties: {}",sm.getCurrentTransaction().getDirty().stream().map(o->((IObjectProxy)o).___getRid()).collect(Collectors.joining(", ")));
         sm.rollback();
 
         //asserts:
