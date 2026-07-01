@@ -1,7 +1,6 @@
 package net.adbogm.proxy;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
@@ -308,25 +307,21 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                     }
                 }
 
-                try {
-                    if (superMethod == null) {
-                        String bbMName = Arrays.asList(target.getClass().getDeclaredMethods()).stream().filter(m -> m.getName().startsWith(method.getName() + "$ac")).findFirst().get().getName();
-                        LOGGER.log(Level.TRACE, "SuperMethod NULL!!! ---> redefine superMethod> " + bbMName);
+                if (superMethod == null) {
+                    String bbMName = Arrays.asList(target.getClass().getDeclaredMethods()).stream().filter(m -> m.getName().startsWith(method.getName() + "$ac")).findFirst().get().getName();
+                    LOGGER.log(Level.TRACE, "SuperMethod NULL!!! ---> redefine superMethod> " + bbMName);
 
-                        Class[] p = new Class[args.length];
-                        for (int i = 0; i < args.length; i++) {
-                            p[i] = args[i].getClass().getName().contains("EasyProxy") ? args[i].getClass().getSuperclass() : args[i].getClass();
-                        }
-
-                        LOGGER.log(Level.TRACE, "Method parameterTypes: " + Arrays.asList(method.getParameterTypes()));
-                        LOGGER.log(Level.TRACE, "Args parameterTypes: " + Arrays.asList(p));
-                        Method m = target.getClass().getMethod(bbMName, p);
-                        res = m.invoke(target, args);
-                    } else {
-                        res = superMethod.invoke(target, args);
+                    Class[] p = new Class[args.length];
+                    for (int i = 0; i < args.length; i++) {
+                        p[i] = args[i].getClass().getName().contains("EasyProxy") ? args[i].getClass().getSuperclass() : args[i].getClass();
                     }
-                } catch (InvocationTargetException ex) {
-                    throw ex.getCause();
+
+                    LOGGER.log(Level.TRACE, "Method parameterTypes: " + Arrays.asList(method.getParameterTypes()));
+                    LOGGER.log(Level.TRACE, "Args parameterTypes: " + Arrays.asList(p));
+                    Method m = target.getClass().getMethod(bbMName, p);
+                    res = m.invoke(target, args);
+                } else {
+                    res = superMethod.invoke(target, args);
                 }
                 // verificar si hay diferencias entre los objetos dependiendo de la estrategia seleccionada.
                 if (this.___objectReady) {
