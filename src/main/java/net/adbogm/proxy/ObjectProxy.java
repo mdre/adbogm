@@ -1388,12 +1388,14 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
         for (Map.Entry<String, Class<?>> entry : classdef.linkLists.entrySet()) {
             String field = entry.getKey();
             Class<?> fc = entry.getValue();
-            LOGGER.log(Level.DEBUG, "Field: {}   Class: {}", field, fc.getName());
+            LOGGER.log(Level.DEBUG, "       Field: {}   Class: {}", field, fc.getName());
 
             Field fLink = classdef.fieldsObject.get(field);
             Object coll = objectMapper.getFieldValue(this.___proxiedObject, fLink);
             if (coll != null && coll instanceof ILazyCalls) {
+//                LOGGER.log(Level.TRACE, "       Field: {}   Class: {}   size() = {}", field, fc.getName(), ((Collection)coll).size());
                 ((ILazyCalls) coll).rollback();
+//                LOGGER.log(Level.TRACE, "       post collection rollback  size() = {}", ((Collection)coll).size());
             } else {
                 objectMapper.setFieldValue(this.___proxiedObject, fLink, null);
             }
@@ -1433,6 +1435,8 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                 forEach(coll -> ((ILazyCalls) coll).clearState());
         this.updateIndirectLinks();
         this.___removeDirtyMark();
+        this.___isNew = false;
+        
 //        this.___transaction.closeInternalTx();
     }
 
