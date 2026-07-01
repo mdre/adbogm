@@ -13,6 +13,7 @@ import net.adbogm.annotations.Embedded;
 import net.adbogm.annotations.Entity;
 import net.adbogm.annotations.Ignore;
 import net.adbogm.annotations.Indirect;
+import net.adbogm.annotations.OnlyAdd;
 import net.adbogm.annotations.RID;
 import net.adbogm.annotations.Sequence;
 import net.adbogm.annotations.Version;
@@ -220,7 +221,7 @@ public class ClassCache {
                                 cached.embeddedFields.put(f.getName(), f.getType());
                             } else if (isEnumCollection) {
                                 cached.enumCollectionFields.put(f.getName(), f.getType());
-                            } else if (f.isAnnotationPresent(Indirect.class)) {
+                            } else if (!f.isAnnotationPresent(OnlyAdd.class) && f.isAnnotationPresent(Indirect.class)) {
                                 // es una colección de objetos indirectos.
                                 LOGGER.log(Level.DEBUG, "Es una colección de objetos indirectos.");
                                 cached.indirectLinkLists.put(f.getName(), f.getType());
@@ -230,7 +231,7 @@ public class ClassCache {
                                 cached.linkLists.put(f.getName(), f.getType());
                             }
                         } else {
-                            if (f.isAnnotationPresent(Indirect.class)) {
+                            if (!f.isAnnotationPresent(OnlyAdd.class) && f.isAnnotationPresent(Indirect.class)) {
                                 // es un objetos indirectos.
                                 LOGGER.log(Level.DEBUG, "Es un objeto indirecto.");
                                 cached.indirectLinks.put(f.getName(), f.getType());

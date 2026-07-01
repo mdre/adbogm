@@ -944,7 +944,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                         f = cDef.fieldsObject.get(field);
 
                         // preparar el nombre de la relación
-                        final String graphRelationName = cDef.entityName + "_" + field;
+                        final String graphRelationName = this.___transaction.getObjectMapper().getGraphRelationName(cDef, f);
 
                         Object collectionFieldValue = f.get(this.___proxiedObject);
 
@@ -989,6 +989,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
 
                                 List listFieldValue = (List) collectionFieldValue;
                                 Map<Object, ObjectCollectionState> colState = lazyCollectionCalls.collectionState();
+                                String listGraphRelationName = lazyCollectionCalls.getRelationName();
 
                                 // procesar los elementos presentes en la colección
                                 for (int i = 0; i < listFieldValue.size(); i++) {
@@ -1016,10 +1017,10 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                                         LOGGER.log(Level.TRACE, "creando nueve edge {} --> {}", this.___getRid(),
                                                 ((IObjectProxy) colObject).___getVertex().getIdentity().toString()
                                         );
-                                        MutableEdge oe = this.___getVertex().newEdge(graphRelationName, ((IObjectProxy) colObject).___getVertex());
+                                        MutableEdge oe = this.___getVertex().newEdge(listGraphRelationName, ((IObjectProxy) colObject).___getVertex());
                                         oe.save();
                                         if (this.___transaction.isAuditing()) {
-                                            this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST ADD: " + graphRelationName, oe);
+                                            this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST ADD: " + listGraphRelationName, oe);
                                         }
                                     }
                                 }
@@ -1040,13 +1041,13 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                                         //                ODirection.OUT,
                                         //                graphRelationName))
 
-                                        Iterator<Edge> edges = ((MutableVertex) this.___baseElement).getEdges(DIRECTION.OUT, graphRelationName).iterator();
+                                        Iterator<Edge> edges = ((MutableVertex) this.___baseElement).getEdges(DIRECTION.OUT, listGraphRelationName).iterator();
                                         while (edges.hasNext()) {
                                             MutableEdge edge = edges.next().modify();
                                             LOGGER.log(Level.TRACE, "edge in: {} -- out --> {}", edge.getIn().toString(), edge.getOut().toString());
                                             if (edge.getIn().toString().equals(((IObjectProxy) colObject).___getVertex().getIdentity().toString())) {
                                                 if (this.___transaction.isAuditing()) {
-                                                    this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST REMOVE: " + graphRelationName, edge);
+                                                    this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST REMOVE: " + listGraphRelationName, edge);
                                                 }
                                                 edge.delete();
                                             }
@@ -1055,7 +1056,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
                                         // si existe la anotación, remover tambien el vertex
                                         if (f.isAnnotationPresent(RemoveOrphan.class)) {
                                             if (this.___transaction.isAuditing()) {
-                                                this.___transaction.auditLog(this, AuditType.DELETE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST DELETE: " + graphRelationName, colObject);
+                                                this.___transaction.auditLog(this, AuditType.DELETE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "LINKLIST DELETE: " + listGraphRelationName, colObject);
                                             }
                                             this.___transaction.delete(colObject);
                                         }
