@@ -26,6 +26,7 @@ import net.adbogm.exceptions.ReferentialIntegrityViolation;
 import net.adbogm.exceptions.UnknownRID;
 import net.adbogm.proxy.IObjectProxy;
 import net.adbogm.proxy.ObjectProxy;
+import net.adbogm.security.AccessRight;
 import net.adbogm.security.UserSID;
 import net.adbogm.utils.DateHelper;
 import net.dirtydetector.agent.ITransparentDirtyDetector;
@@ -47,6 +48,7 @@ import test.IndirectObject;
 import test.InterfaceTest;
 import test.SVExChild;
 import test.Secure;
+import test.SSimpleVertex;
 import test.SimpleVertex;
 import test.SimpleVertexEx;
 import test.SimpleVertexInterfaceAttr;
@@ -1358,6 +1360,33 @@ public class SessionManagerTest {
         assertEquals(size, retRollback.getStringlist().size());
 
         LOGGER.info("==========================================================");
+    }
+
+    @Test
+    public void testEmbeddedProxyDirectMutationIsPersisted() {
+        LOGGER.info("\n\n\n");
+        LOGGER.info("***************************************************************");
+        LOGGER.info("Persist direct mutations over embedded collection proxies");
+        LOGGER.info("***************************************************************");
+
+        SimpleVertexWithEmbedded svemb = this.sm.store(new SimpleVertexWithEmbedded());
+        String rid = this.sm.getRID(svemb);
+        this.sm.commit();
+        this.sm.getCurrentTransaction().clearCache();
+
+        SimpleVertexWithEmbedded reloaded = this.sm.get(SimpleVertexWithEmbedded.class, rid);
+        reloaded.getStringlist().add("direct-list-value");
+        reloaded.getSimplemap().put("direct-map-key", 99);
+
+        assertEquals(1, sm.getDirtyCount());
+
+        this.sm.commit();
+        assertEquals(0, sm.getDirtyCount());
+        this.sm.getCurrentTransaction().clearCache();
+
+        SimpleVertexWithEmbedded persisted = this.sm.get(SimpleVertexWithEmbedded.class, rid);
+        assertTrue(persisted.getStringlist().contains("direct-list-value"));
+        assertEquals(Integer.valueOf(99), persisted.getSimplemap().get("direct-map-key"));
     }
 
     @Test
@@ -3528,5 +3557,35 @@ public class SessionManagerTest {
         assertTrue(v.equals(v));
         assertNotNull(v.hashCode());
     }
-    
+
+    @Test
+    public void testSecurityValidationDoesNotRegisterLoadedSObjectAsDirty() {
+        LOGGER.info("\n\n\n");
+        LOGGER.info("***************************************************************");
+        LOGGER.info("Verificar que validar seguridad al cargar un SObject no lo registre como dirty");
+
+        String uuid = UUID.randomUUID().toString();
+        UserSID user = sm.store(new UserSID("user-" + uuid, "user-" + uuid));
+        SSimpleVertex secureObject = new SSimpleVertex("secure-" + uuid);
+        secureObject.setOwner(user);
+        secureObject.setAcl(user, new AccessRight().setRights(AccessRight.WRITE));
+        secureObject = sm.store(secureObject);
+        sm.commit();
+
+        String secureRid = sm.getRID(secureObject);
+        sm.getCurrentTransaction().clearCache();
+        sm.setLoggedInUser(user);
+
+        SSimpleVertex reloaded = sm.get(SSimpleVertex.class, secureRid);
+
+        LOGGER.info("security validation dirty state: reloadedDirty={} dirtyCount={} dirtyCache={}",
+                ((IObjectProxy) reloaded).___isDirty(), sm.getDirtyCount(),
+                sm.getCurrentTransaction().getDirtyCache());
+        assertEquals(AccessRight.WRITE, reloaded.getSecurityState());
+        assertFalse(((IObjectProxy) reloaded).___isDirty());
+        // This is the regression: validate() writes SObject.__state, but that
+        // security cache must not enqueue the entity for persistence.
+        assertFalse(sm.getCurrentTransaction().getDirtyCache().containsKey(secureRid));
+    }
+
 }
