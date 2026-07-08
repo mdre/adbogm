@@ -666,15 +666,15 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
 
             //----------------------------------------------------------------------
             //restart indirect collections to reload them
-//        classdef.indirectLinks.keySet().forEach(field -> {
-//            Field f = classdef.fieldsObject.get(field);
-//                try {
-//                    ILazyCalls coll = (ILazyCalls)f.get(this.___proxiedObject);
-//                    coll.rollback();
-//                } catch (IllegalArgumentException | IllegalAccessException ex) {
-//                    LOGGER.log(Level.SEVERE, "Error eager loading link list! " + f, ex);
-//            }
-//        });
+//            classdef.indirectLinks.keySet().forEach(field -> {
+//                Field f = classdef.fieldsObject.get(field);
+//                    try {
+//                        ILazyCalls coll = (ILazyCalls)f.get(this.___proxiedObject);
+//                        coll.rollback();
+//                    } catch (IllegalArgumentException | IllegalAccessException ex) {
+//                        LOGGER.log(Level.SEVERE, "Error eager loading link list! " + f, ex);
+//                }
+//            });
             //----------------------------------------------------------------------
         } 
         // volver a establecer el estado de Dirty.

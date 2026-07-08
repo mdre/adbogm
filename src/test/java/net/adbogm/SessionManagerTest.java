@@ -1009,6 +1009,43 @@ public class SessionManagerTest {
         
     }
 
+    @Test
+    public void testRollbackDelete() {
+        LOGGER.info("\n\n\n");
+        LOGGER.info("***************************************************************");
+        LOGGER.info("Rollback simple. Solo se restablecen los atributos directos.");
+        LOGGER.info("***************************************************************");
+        SimpleVertex sv = new SimpleVertex();
+
+        sv.setI(1);
+        sv.setF(1.0f);
+        sv.setB(true);
+        sv.setS("init rollback");
+        sv.setoI(10);
+        sv.setoF(1.5f);
+
+        LOGGER.info("guardado del objeto limpio.");
+        SimpleVertex stored = sm.store(sv);
+        sm.commit();
+        String rid = sm.getRID(stored);
+        LOGGER.info("rid: "+rid);
+        
+        LOGGER.info("Borrar el nodo");
+        sm.delete(stored);
+        
+        assertThrows(ObjectMarkedAsDeleted.class, ()->stored.getF());
+        
+        sm.rollback();
+        try {
+            stored.getF();
+        } catch (ObjectMarkedAsDeleted omad) {
+            fail("El objeto sigue marcado como borrado después del rollback");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        sm.getCurrentTransaction().close();
+    }
     
     @Test
     public void persistEnum() throws Exception {
@@ -3188,6 +3225,12 @@ public class SessionManagerTest {
         assertFalse(((IObjectProxy)sub).___isDirty());
         assertFalse(((IObjectProxy)col1).___isDirty());
         assertFalse(((IObjectProxy)col2).___isDirty());
+        
+        main.setTestData("modificado");
+        System.out.println("indirect ref: "+main.getAlIndirectLinked().stream().map(o -> Integer.toHexString(System.identityHashCode(o))).collect(Collectors.joining(", ")));
+        sm.commit();
+        System.out.println("post commit");
+        System.out.println("indirect ref: "+main.getAlIndirectLinked().stream().map(o -> Integer.toHexString(System.identityHashCode(o))).collect(Collectors.joining(", ")));
     }
     
     @Test

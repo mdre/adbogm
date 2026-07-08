@@ -1,6 +1,8 @@
 package net.adbogm;
 
 
+import net.adbogm.proxy.ObjectProxy;
+import org.apache.logging.log4j.Level;
 import test.TestConfig;
 
 /*
@@ -23,19 +25,11 @@ public class SetupSessionManager {
         }
 
         
-//        sm
+        sm
 //          .setClassLevelLog(TransparentDirtyDetectorInstrumentator.class, Level.FINER)
-//            .setClassLevelLog(ObjectProxy.class, Level.FINEST)
-//            .setClassLevelLog(ClassCache.class, Level.FINER)
-//            .setClassLevelLog(Transaction.class, Level.TRACE)
-//            .setClassLevelLog(ObjectProxy.class, Level.TRACE)
-//            .setClassLevelLog(SimpleCache.class, Level.FINER)
-//            .setClassLevelLog(ArrayListLazyProxy.class, Level.TRACE)
-//            .setClassLevelLog(ObjectMapper.class, Level.TRACE)
-//            .setClassLevelLog(VertexUtils.class, Level.TRACE)
-//            .setClassLevelLog(SObject.class, Level.FINER)
-//            .setClassLevelLog(TransparentDirtyDetectorInstrumentator.class, Level.INFO)
-//        ;
+            .setClassLevelLog(Transaction.class, org.apache.logging.log4j.Level.TRACE)
+            .setClassLevelLog(ObjectProxy.class, Level.TRACE)
+        ;
 
         return sm;
     }

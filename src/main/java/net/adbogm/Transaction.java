@@ -483,6 +483,11 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
         this.storedObjects.clear();
 
         // clean the cache of objects to delete
+        for (Map.Entry<String, Object> entry : dirtyDeleted.entrySet()) {
+            IObjectProxy value = (IObjectProxy) entry.getValue();
+            value.___rollback();
+        }
+
         this.dirtyDeleted.clear();
         // clean the invalid entries of auditor cache
         if (this.isAuditing()) {
