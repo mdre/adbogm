@@ -330,6 +330,15 @@ public class SessionManager implements IActions.IStore, IActions.IGet {
     public void shutdown() {
         if (this.publicTransaction != null)
             this.publicTransaction.close();
+        for (WeakReference<Transaction> wtx : openTransactionsList) {
+            Transaction tx = wtx.get();
+            if (tx!=null) { 
+                tx.close();
+            }
+        }
+        if (this.grpcServer != null) {
+            this.grpcServer.close();
+        }
     }
 
     /**
