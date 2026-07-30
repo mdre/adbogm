@@ -151,9 +151,9 @@ repositories {
 //   fijas concretas en el POM generado para Maven Central.
 // ============================================================
 dependencies {
-    api "com.github.mdre:EasyProxy:1.+"
+    api "io.github.mdre:EasyProxy:1.+"
 
-    implementation "com.github.mdre:tdd-agent:0.+"
+    implementation "io.github.mdre:tdd-agent:0.+"
 
     api "com.arcadedb:arcadedb-engine:${arcadeDbVersion}"
     api "com.arcadedb:arcadedb-server:${arcadeDbVersion}"
