@@ -196,6 +196,16 @@ public class LinkedListLazyProxy extends LinkedList implements ILazyCollectionCa
     }
 
     @Override
+    public String getRelationName() {
+        return this.field;
+    }
+
+    @Override
+    public void setOnlyAdd(String referenceAttribute) {
+        throw new UnsupportedOperationException("OnlyAdd is only supported for ArrayList/List relations.");
+    }
+
+    @Override
     public Spliterator spliterator() {
         if (lazyLoad) {
             this.lazyLoad();

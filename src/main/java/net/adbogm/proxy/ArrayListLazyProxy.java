@@ -1,6 +1,7 @@
 package net.adbogm.proxy;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -44,6 +45,8 @@ public class ArrayListLazyProxy extends ArrayList implements ILazyCollectionCall
 
     private boolean lazyLoad = true;
     private boolean lazyLoading = false;
+    private boolean onlyAdd = false;
+    private String onlyAddReferenceAttribute;
 
     private Transaction transaction;
     private Vertex relatedTo;
@@ -92,20 +95,22 @@ public class ArrayListLazyProxy extends ArrayList implements ILazyCollectionCall
         this.lazyLoading = true;
         
         LOGGER.log(Level.DEBUG, "relatedTo: {} - field: {} - Class: {}", new Object[]{relatedTo, field, fieldClass.getSimpleName()});
-        // recuperar todos los elementos desde el vértice y agregarlos a la colección
-        Iterable<Vertex> rt = relatedTo.getVertices(this.direction, field);
-//        for (Iterator<Vertex> iterator = relatedTo.getVertices(Direction.OUT, field).iterator(); iterator.hasNext();) {
-        for (Iterator<Vertex> iterator = rt.iterator(); iterator.hasNext();) {
-            MutableVertex next = iterator.next().modify();
-            LOGGER.log(Level.DEBUG, "loading: " + next.toJSON(true));
-            // el Lazy SIEMPRE carga los datos desde la base de datos esquivando los objetos que se encuentren en 
-            // el cache.
-            Object o = null;
-            o = transaction.get(fieldClass, next.getIdentity().toString());
-            this.add(o);
-            
-            // se asume que todos fueron borrados
-            this.listState.put(o, ObjectCollectionState.REMOVED);
+        if (!this.onlyAdd) {
+            // recuperar todos los elementos desde el vértice y agregarlos a la colección
+            Iterable<Vertex> rt = relatedTo.getVertices(this.direction, field);
+//            for (Iterator<Vertex> iterator = relatedTo.getVertices(Direction.OUT, field).iterator(); iterator.hasNext();) {
+            for (Iterator<Vertex> iterator = rt.iterator(); iterator.hasNext();) {
+                MutableVertex next = iterator.next().modify();
+                LOGGER.log(Level.DEBUG, "loading: " + next.toJSON(true));
+                // el Lazy SIEMPRE carga los datos desde la base de datos esquivando los objetos que se encuentren en 
+                // el cache.
+                Object o = null;
+                o = transaction.get(fieldClass, next.getIdentity().toString());
+                this.add(o);
+
+                // se asume que todos fueron borrados
+                this.listState.put(o, ObjectCollectionState.REMOVED);
+            }
         }
         this.lazyLoading = false;
 //        this.transaction.closeInternalTx();
@@ -136,8 +141,28 @@ public class ArrayListLazyProxy extends ArrayList implements ILazyCollectionCall
     @Override
     public synchronized void clearState() {
         LOGGER.log(Level.DEBUG, "\n\nclear states...");
-        this.dirty = false;
+        if (this.onlyAdd && this.onlyAddReferenceAttribute != null) {
+            super.clear();
+            try {
+                IObjectProxy theParent = this.parent.get();
+                if (theParent != null) {
+                    Field referenceAttribute = this.transaction.getObjectMapper()
+                            .getClassDef(theParent)
+                            .fieldsObject
+                            .get(this.onlyAddReferenceAttribute);
+                    if (referenceAttribute != null) {
+                        Object referenceAttributeList = referenceAttribute.get(theParent);
+                        if (referenceAttributeList instanceof ArrayListLazyProxy) {
+                            ((ArrayListLazyProxy) referenceAttributeList).rollback();
+                        }
+                    }
+                }
+            } catch (IllegalAccessException | IllegalArgumentException ex) {
+                LOGGER.log(Level.ERROR, "ERROR", ex);
+            }
+        }
 
+        this.dirty = false;
         this.listState.clear();
 
         for (Object o : this) {
@@ -188,6 +213,17 @@ public class ArrayListLazyProxy extends ArrayList implements ILazyCollectionCall
     public void forceLoad() {
         super.clear();
         this.lazyLoad();
+    }
+
+    @Override
+    public String getRelationName() {
+        return this.field;
+    }
+
+    @Override
+    public void setOnlyAdd(String referenceAttribute) {
+        this.onlyAdd = true;
+        this.onlyAddReferenceAttribute = referenceAttribute;
     }
     
     
