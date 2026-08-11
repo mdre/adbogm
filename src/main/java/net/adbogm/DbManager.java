@@ -278,7 +278,7 @@ public class DbManager {
         // es vértice o arista
         boolean esArista = isEdgeType(clazz);
         
-        String exist = "let exist = (select from schema:types  where name = '"+className+")';\n"
+        String exist = "let exist = (select from schema:types  where name = '"+className+"');\n"
                 + "if ($exist.size() %s 0) {\n"
                 + "    %s"
                 + "}\n";
@@ -293,7 +293,7 @@ public class DbManager {
         // orden de create
         String sType = (esArista ? "edge" : "vertex");
         String extendsFrom = superName.isEmpty() ? "" : " extends "+superName;
-        String create = String.format("create %s type %s if not exist %s;\n", sType, className, extendsFrom);
+        String create = String.format("create %s type %s if not exists %s;\n", sType, className, extendsFrom);
         
         clazzStruct.create = create +"\n"
                 + "alter type " + className + " custom javaClass='" + clazz.getCanonicalName() + "';\n";
@@ -347,8 +347,7 @@ public class DbManager {
                     String let = "\n"
                                     +"let exist = select from "
                                                         + "(select expand(properties) "
-                                                        + " from (select expand(classes) "
-                                                        + " from metadata:schema) "
+                                                        + " from schema:types "
                                                         + " where name = '"+className+"') where name = '"+fieldName+"';\n"
                                     + "if ($exist.size()=0) {\n"
                                     + "    %s"
@@ -443,13 +442,8 @@ public class DbManager {
                     String engine = idx.type()==Indexed.IndexType.LUCENE?" FULLTEXT ENGINE LUCENE ":""+idx.type();
                     engine += (!idx.metadata().isEmpty()?"METADATA "+idx.metadata():"");
                     
-                    String createLink = "create index "+currentProp+" on "+className+"("+fieldName+") "+engine+";";
-                    String statement = this.incremental ? String.format("\n"
-                        +"let exist = select from(select expand(indexes) from metadata:indexmanager) where name = '"+currentProp+"';\n"
-                        + "if ($exist.size()=0) {\n"
-                        + "    %s"
-                        + "\n}\n ", createLink) : createLink;
-                    clazzStruct.properties.add(statement);
+                    String createLink = "create index "+currentProp+" if not exists on "+className+"("+fieldName+") "+engine+";";
+                    clazzStruct.properties.add(createLink);
                 }
             }
         }
@@ -487,15 +481,9 @@ public class DbManager {
     
     private void processEdge(String field, String edgeClass, ClassStruct classStruct) {
         String linkName = classStruct.className + "_" + field;
-        String createLink = String.format("create class %s extends %s;",
-                linkName, edgeClass);
-        String statement = this.incremental ? String.format("\n"
-            + "let exist = select from (select expand(classes) from metadata:schema) "
-            + "where name = '" + linkName + "';\n"
-            + "if ($exist.size()=0) {\n"
-            + "    %s"
-            + "\n}\n ", createLink) : createLink;
-        classStruct.properties.add(statement);
+        String createLink = String.format("create edge type %s if not exists%s;",
+                linkName, "E".equals(edgeClass) ? "" : " extends " + edgeClass);
+        classStruct.properties.add(createLink);
     }
     
     private List<Class<?>> find(String scannedPackage) {

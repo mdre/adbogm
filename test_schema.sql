@@ -130,7 +130,7 @@ create edge type Enums_enumToString if not exists ;
  
 create edge type Enums_stringToEnum if not exists ;
  
-create vertex type SimpleVertexEx extends SimpleVertex;
+create vertex type SimpleVertexEx if not exists extends SimpleVertex;
 alter type SimpleVertexEx custom javaClass='test.SimpleVertexEx';
 create property SimpleVertexEx.svex if not exists STRING (mandatory true);
 create property SimpleVertexEx.enumTest if not exists string;
@@ -140,7 +140,7 @@ create edge type SimpleVertexEx_looptest if not exists ;
 
 create edge type SimpleVertexEx_eagerTest if not exists ;
 
-create index on SimpleVertexEx(svuuid) UNIQUE;
+create index if not exists on SimpleVertexEx(svuuid) UNIQUE;
  
 create edge type SimpleVertexEx_svinner if not exists ;
 
@@ -160,7 +160,7 @@ create edge type SimpleVertexEx_hmSVE if not exists ;
  
 create edge type SimpleVertexEx_ohmSVE if not exists extends EdgeAttrib;
  
-create vertex type SVExChild extends SimpleVertexEx;
+create vertex type SVExChild if not exists extends SimpleVertexEx;
 alter type SVExChild custom javaClass='test.SVExChild';
 
 create edge type SVExChild_looptest if not exists extends SimpleVertexEx_looptest;
@@ -171,9 +171,9 @@ create edge type SVExChild_alString if not exists extends SimpleVertexEx_alStrin
 
 create edge type SVExChild_hmString if not exists extends SimpleVertexEx_hmString;
  
-create edge type SVExChild_alSV extends SimpleVertexEx_alSV;
+create edge type SVExChild_alSV if not exists extends SimpleVertexEx_alSV;
 
-create edge type SVExChild_lSV extends SimpleVertexEx_lSV;
+create edge type SVExChild_lSV if not exists extends SimpleVertexEx_lSV;
 
 create edge type SVExChild_alSVE if not exists extends SimpleVertexEx_alSVE;
 
