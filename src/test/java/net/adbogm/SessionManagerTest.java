@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import net.adbogm.annotations.Audit;
 import net.adbogm.annotations.Entity;
 import net.adbogm.annotations.RID;
 import net.adbogm.annotations.Version;
@@ -1973,9 +1974,21 @@ public class SessionManagerTest {
         String rid = sm.getRID(sv);
         LOGGER.info("RID: " + rid);
         
-        String query = String.format("select count(*) from OGMAuditLog where rid = '%s'", rid);
+        String query = """
+                select count(*)
+                from OGMAuditLog
+                where rid = '%s'
+                """.formatted(rid);
         long logs = sm.query(query, "");
         assertEquals(1, logs); //store log
+
+        long action = sm.query("""
+                select action
+                from OGMAuditLog
+                where rid = '%s'
+                limit 1
+                """.formatted(rid), "action");
+        assertEquals(Audit.AuditType.WRITE, action);
         
         sm.getCurrentTransaction().clearCache();
         sv = sm.get(SimpleVertexEx.class, rid);
@@ -2002,9 +2015,19 @@ public class SessionManagerTest {
         sv = commitClearAndGet(sv);
         
         String rid = sm.getRID(sv);
-        String query = String.format("select count(*) from OGMAuditLog where rid = '%s'", rid);
+        String query = """
+                select count(*)
+                from OGMAuditLog
+                where rid = '%s'
+                """.formatted(rid);
+        String writeLogsQuery = """
+                select count(*)
+                from OGMAuditLog
+                where rid = '%s' and action = %d
+                """.formatted(rid, Audit.AuditType.WRITE);
         long logs = sm.query(query, "");
         assertEquals(1, logs); //store log
+        assertEquals(1, sm.query(writeLogsQuery, ""));
         
         sv.setAlSVE(new ArrayList<>());
         sv.getAlSVE().add(sm.store(new SimpleVertexEx()));
@@ -2015,6 +2038,7 @@ public class SessionManagerTest {
         
         logs = sm.query(query, "");
         assertEquals(3, logs); //store, read, update
+        assertEquals(2, sm.query(writeLogsQuery, "")); //store and update; rollbacked write is discarded
     }
     
     /*
