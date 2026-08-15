@@ -3,6 +3,7 @@ package net.adbogm.audit;
 import com.arcadedb.database.MutableDocument;
 import com.arcadedb.remote.RemoteDatabase;
 import com.arcadedb.remote.RemoteMutableVertex;
+import com.arcadedb.remote.RemoteSchema;
 import java.util.ArrayList;
 import java.util.UUID;
 import net.adbogm.Transaction;
@@ -33,7 +34,7 @@ public class Auditor implements IAuditor {
                 create property OGMAuditLog.transactionID if not exists string;
                 create property OGMAuditLog.opInTx if not exists integer;
                 create property OGMAuditLog.user if not exists string;
-                create property OGMAuditLog.action if not exists string;
+                create property OGMAuditLog.action if not exists integer;
                 create property OGMAuditLog.label if not exists string;
                 create property OGMAuditLog.log if not exists string;
             """;
@@ -51,6 +52,7 @@ public class Auditor implements IAuditor {
             if (!this.transaction.getCurrentGraphDb().getSchema().existsType(ADBAUDITLOGVERTEXTYPE) ) {
                 LOGGER.log(Level.DEBUG, "creating {}",ADBAUDITLOGVERTEXTYPE);
                 this.transaction.getCurrentGraphDb().command("sqlscript", ADBAUDITLOGSCHEMA);
+                ((RemoteSchema) this.transaction.getCurrentGraphDb().getSchema()).reload();
             }
         }
     }
