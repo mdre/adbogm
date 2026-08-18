@@ -100,8 +100,12 @@ public final class GroupSID implements ISID {
         }
     }
     
-    public final boolean remove(GroupSID user) {
-        return this.participants.remove(user);
+    public final boolean remove(GroupSID group) {
+        boolean removed = this.participants.remove(group);
+        if (removed) {
+            group.removeAddedTo(this);
+        }
+        return removed;
     }
     
     public final List<ISID> getParticipants() {

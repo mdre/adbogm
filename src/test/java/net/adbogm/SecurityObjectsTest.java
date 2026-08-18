@@ -11,6 +11,7 @@ import net.adbogm.security.SObject;
 import net.adbogm.security.UserSID;
 import org.junit.After;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
@@ -349,6 +350,54 @@ public class SecurityObjectsTest {
         
         //this neither:
         assertThrows(CircularReferenceException.class, () -> g1.add(g1));
+    }
+
+    @Test
+    public void removingGroupRemovesInheritedCredentialsFromInverseRelationship() {
+        UserSID user = new UserSID("user", "user-uuid");
+        GroupSID directGroup = new GroupSID("direct-group", "direct-group-uuid");
+        GroupSID aclGroup = new GroupSID("acl-group", "acl-group-uuid");
+
+        directGroup.add(user);
+        aclGroup.add(directGroup);
+
+        assertTrue(user.showSecurityCredentials().contains(aclGroup.getUUID()));
+        assertTrue(aclGroup.remove(directGroup));
+        assertFalse(user.showSecurityCredentials().contains(aclGroup.getUUID()));
+    }
+
+    @Test
+    public void removingPersistedGroupRelationshipStaysRemovedAfterReload() {
+        String suffix = UUID.randomUUID().toString();
+        String userUuid = "user-" + suffix;
+        String directGroupUuid = "direct-group-" + suffix;
+        String aclGroupUuid = "acl-group-" + suffix;
+
+        UserSID user = sm.store(new UserSID(userUuid, userUuid));
+        GroupSID directGroup = sm.store(new GroupSID(directGroupUuid, directGroupUuid));
+        GroupSID aclGroup = sm.store(new GroupSID(aclGroupUuid, aclGroupUuid));
+        directGroup.add(user);
+        aclGroup.add(directGroup);
+        sm.commit();
+
+        String userRid = sm.getRID(user);
+        String directGroupRid = sm.getRID(directGroup);
+        String aclGroupRid = sm.getRID(aclGroup);
+        sm.getCurrentTransaction().clearCache();
+
+        user = sm.get(UserSID.class, userRid);
+        directGroup = sm.get(GroupSID.class, directGroupRid);
+        aclGroup = sm.get(GroupSID.class, aclGroupRid);
+        assertTrue(user.showSecurityCredentials().contains(aclGroupUuid));
+
+        assertTrue(aclGroup.remove(directGroup));
+        assertFalse(user.showSecurityCredentials().contains(aclGroupUuid));
+        sm.commit();
+        sm.getCurrentTransaction().clearCache();
+
+        UserSID reloadedUser = sm.get(UserSID.class, userRid);
+        assertTrue(reloadedUser.showSecurityCredentials().contains(directGroupUuid));
+        assertFalse(reloadedUser.showSecurityCredentials().contains(aclGroupUuid));
     }
     
 }
