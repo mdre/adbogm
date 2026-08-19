@@ -489,8 +489,9 @@ public class SessionManager implements IActions.IStore, IActions.IGet {
      * </pre>
      * @param <T> clase de referencia para crear la lista de resultados
      * @param clase clase de referencia
-     * @param sql comando a ejecutar
-     * @param param parámetros extras para el query parametrizado.
+     * @param language lenguaje a utilizar
+     * @param query comando a ejecutar
+     * @param params parámetros extras para el query parametrizado.
      * @return una lista de la clase solicitada con los objetos lazy inicializados.
      */
     public <T> List<T> query(Class<T> clase, QueryLanguage language, String query, Map params) {
