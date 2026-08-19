@@ -130,7 +130,7 @@ create edge type Enums_enumToString if not exists ;
  
 create edge type Enums_stringToEnum if not exists ;
  
-create vertex type SimpleVertexEx if not exists extends SimpleVertex;
+create vertex type SimpleVertexEx if not exists extends SimpleVertex ;
 alter type SimpleVertexEx custom javaClass='test.SimpleVertexEx';
 create property SimpleVertexEx.svex if not exists STRING (mandatory true);
 create property SimpleVertexEx.enumTest if not exists string;
@@ -140,7 +140,7 @@ create edge type SimpleVertexEx_looptest if not exists ;
 
 create edge type SimpleVertexEx_eagerTest if not exists ;
 
-create index if not exists on SimpleVertexEx(svuuid) UNIQUE;
+create index if not exists on SimpleVertexEx(svuuid) UNIQUE ;
  
 create edge type SimpleVertexEx_svinner if not exists ;
 
@@ -173,7 +173,7 @@ create edge type SVExChild_hmString if not exists extends SimpleVertexEx_hmStrin
  
 create edge type SVExChild_alSV if not exists extends SimpleVertexEx_alSV;
 
-create edge type SVExChild_lSV if not exists extends SimpleVertexEx_lSV;
+create edge type SVExChild_lSV  if not exists extends SimpleVertexEx_lSV;
 
 create edge type SVExChild_alSVE if not exists extends SimpleVertexEx_alSVE;
 
@@ -204,6 +204,21 @@ create vertex type SubSecure if not exists ;
 alter type SubSecure custom javaClass='test.SubSecure';
 
 create edge type SubSecure_aList if not exists ;
+
+create vertex type OnlyAddChild if not exists;
+alter type OnlyAddChild custom javaClass='test.OnlyAddChild';
+create property OnlyAddChild.name if not exists STRING;
+
+create vertex type OnlyAddParent if not exists;
+alter type OnlyAddParent custom javaClass='test.OnlyAddParent';
+
+create edge type OnlyAddParent_items if not exists;
+create edge type OnlyAddParent_notifications if not exists;
+
+create vertex type OnlyAddHolder if not exists;
+alter type OnlyAddHolder custom javaClass='test.OnlyAddHolder';
+create edge type OnlyAddHolder_parent if not exists;
+
 
 create vertex type OnlyAddChild if not exists;
 alter type OnlyAddChild custom javaClass='test.OnlyAddChild';
