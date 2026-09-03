@@ -17,6 +17,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 import test.SSimpleVertex;
+import test.SimpleVertex;
 
 /**
  *
@@ -398,6 +399,33 @@ public class SecurityObjectsTest {
         UserSID reloadedUser = sm.get(UserSID.class, userRid);
         assertTrue(reloadedUser.showSecurityCredentials().contains(directGroupUuid));
         assertFalse(reloadedUser.showSecurityCredentials().contains(aclGroupUuid));
+    }
+    
+    @Test
+    public void simpleFieldModifiedBeforeLazyCollectionIsPersistedWithSecurity() {
+        String suffix =  UUID.randomUUID().toString();
+        String originalValue = "original-" + suffix;
+        String modifiedValue = "modified-" + suffix;
+
+        SSimpleVertex stored = sm.store(new SSimpleVertex(originalValue));
+        stored.addSV(new SimpleVertex("sub sv in SO"));
+        sm.commit();
+
+        String rid = sm.getRID(stored);
+        sm.getCurrentTransaction().clearCache();
+        sm.setLoggedInUser(new UserSID("User-" + suffix, "uuid-" + suffix));
+
+        stored = sm.get(SSimpleVertex.class, rid);
+        assertFalse(((IObjectProxy) stored).___isDirty());
+
+        stored.setSAndAddSub(modifiedValue, new SimpleVertex());
+        sm.commit();
+
+        sm.getCurrentTransaction().clearCache();
+        SSimpleVertex reloaded = sm.get(SSimpleVertex.class, rid);
+
+        assertEquals(2, reloaded.svSize());
+        assertEquals(modifiedValue, reloaded.getS());
     }
     
 }

@@ -1,5 +1,6 @@
 package test;
 
+import java.util.ArrayList;
 import net.adbogm.annotations.Entity;
 import net.adbogm.security.SObject;
 
@@ -11,7 +12,7 @@ import net.adbogm.security.SObject;
 public class SSimpleVertex extends SObject {
 
     private String s;
-    
+    private ArrayList<SimpleVertex> subsv = new ArrayList<>();
     
     public SSimpleVertex(String s) {
         this.s = s;
@@ -32,5 +33,18 @@ public class SSimpleVertex extends SObject {
     @Override
     public String toString() {
         return this.s + " - State: "+this.getSecurityState() ;
+    }
+ 
+    public void addSV(SimpleVertex sv) {
+        this.subsv.add(sv);
+    }
+    
+    public int svSize() {
+        return this.subsv.size();
+    }
+    
+    public void setSAndAddSub(String s, SimpleVertex sv) {
+        this.s = s;
+        this.subsv.add(sv);
     }
 }
