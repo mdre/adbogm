@@ -834,7 +834,7 @@ public class SessionManagerTest {
     @Test
     public void bug() throws Exception {
         // borrar datos viejos para mantener la base.
-        sm.getDBTx().execute("sql", "delete from SimpleVertex where s = \"bug\"", "");
+        sm.getDBTx().execute("sql", "delete from SimpleVertex where s = \"bug\"");
         
         
         SimpleVertexEx v1 = sm.store(new SimpleVertexEx());
@@ -1574,8 +1574,8 @@ public class SessionManagerTest {
         LOGGER.info("***************************************************************");
 
         SimpleVertexWithEmbedded svemb = this.sm.store(new SimpleVertexWithEmbedded());
-        String rid = this.sm.getRID(svemb);
         this.sm.commit();
+        String rid = this.sm.getRID(svemb);
         this.sm.getCurrentTransaction().clearCache();
 
         SimpleVertexWithEmbedded reloaded = this.sm.get(SimpleVertexWithEmbedded.class, rid);
@@ -1933,9 +1933,9 @@ public class SessionManagerTest {
         SimpleVertexEx svEx = new SimpleVertexEx();
         svEx.initArrayList();
         svEx = sm.store(svEx);
-        String rid = sm.getRID(svEx);
-        LOGGER.info("store svEx: "+sm.getRID(svEx));
         sm.commit();
+        String rid = sm.getRID(svEx);
+        LOGGER.info("store svEx: " + rid);
         LOGGER.info("commited.");
         
         svEx = null;
@@ -2743,9 +2743,9 @@ public class SessionManagerTest {
         
         SimpleVertexEx s1 = new SimpleVertexEx();
         s1 = t.store(s1);
-        //el store inicia la transacción
-        assertTrue(t.getCurrentGraphDb().isTransactionActive());
-        //luego sí debe cerrarla
+        //el store ya no inicia la transacción en la BD (se difiere a commit)
+        assertFalse(t.getCurrentGraphDb().isTransactionActive());
+        //el commit inicia y cierra la transacción
         t.commit();
         assertFalse(t.getCurrentGraphDb().isTransactionActive());
         

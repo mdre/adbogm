@@ -65,6 +65,9 @@ public class HashMapLazyProxy extends HashMap<Object, Object> implements ILazyMa
         this.keyClass = k;
         this.valueClass = v;
         this.direction = d;
+        if (parent != null && parent.___isNew()) {
+            this.lazyLoad = false;
+        }
     }
 
     //********************* change control **************************************

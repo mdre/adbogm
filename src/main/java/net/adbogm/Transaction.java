@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import net.adbogm.annotations.Audit;
 import net.adbogm.annotations.CascadeDelete;
@@ -89,6 +90,9 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
     
     // mapa objeto -> proxy: contiene los objetos que se van almacenando mientras no se haga commit
     private final ConcurrentHashMap<Object, Object> storedObjects = new ConcurrentHashMap<>();
+    
+    // Generador de RIDs temporales en memoria (#-1:x)
+    private final AtomicLong tempRidSequence = new AtomicLong(0);
     
     // objects that must be updated after database commit before ending transaction's commit
     private final Set<IObjectProxy> afterCommit = ConcurrentHashMap.newKeySet();
@@ -328,10 +332,33 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
             LOGGER.log(Level.DEBUG, "Objetos marcados como Dirty: {}", dirty.size());
             LOGGER.log(Level.DEBUG, "Objetos marcados como DirtyDeleted: {}", dirtyDeleted.size());
             
-            // process all the dirty objects:
+            // FASE 2: Persistir vértices nuevos en la transacción activa para obtener RIDs reales
+            for (Map.Entry<String, Object> e : new ArrayList<>(dirty.entrySet())) {
+                String rid = e.getKey();
+                IObjectProxy o = (IObjectProxy) e.getValue();
+                if (!o.___isDeleted() && o.___isValid() && o.___isNew()) {
+                    if (rid.startsWith("#-1:")) {
+                        MutableVertex mv = o.___getVertex().modify();
+                        mv.setIdentity(null);
+                        mv.save();
+                        String realRid = mv.getIdentity().toString();
+                        LOGGER.log(Level.DEBUG, "RID temporal {} asignado a real: {}", rid, realRid);
+                        
+                        dirty.remove(rid);
+                        dirty.put(realRid, o);
+                        
+                        removeFromCache(rid);
+                        addToCache(realRid, o);
+                        
+                        o.___injectRid();
+                    }
+                }
+            }
+            
+            // FASE 3: process all the dirty objects (edges & updates):
             Set<String> processedDirty = new HashSet<>();
             while (!processedDirty.containsAll(dirty.keySet())) {
-                for (Map.Entry<String, Object> e : dirty.entrySet()) {
+                for (Map.Entry<String, Object> e : new ArrayList<>(dirty.entrySet())) {
                     String rid = e.getKey();
                     if (!processedDirty.contains(rid)) {
                         IObjectProxy o = (IObjectProxy) e.getValue();
@@ -531,10 +558,8 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
         
         LOGGER.log(Level.TRACE, "dirty: size: {}",new Object[]{this.dirty.mappingCount()});
         
-        // si no hay una transacción activa, crear una
-        if (!this.arcadedbTransact.isTransactionActive()) {
-            this.begin();
-        }
+        // si no hay una transacción activa, no iniciarla acá.
+        // La transacción física en ArcadeDB se abre únicamente al llamar a commit().
         
         T proxy;
         // si el objeto ya fue guardado con anterioridad, devolver la instancia creada previamente.
@@ -578,8 +603,12 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
             VertexUtils.fillElement(v,omap);
             
             // fijar el RID temporal.
-            v.save();
-            v.reload(); // forzar la recarga 
+            if (!this.arcadedbTransact.isTransactionActive()) {
+                v.setIdentity(new RID(-1, this.tempRidSequence.incrementAndGet()));
+            } else {
+                v.save();
+                v.reload(); // forzar la recarga 
+            }
             LOGGER.log(Level.TRACE, "virtual RID: {}",v.getIdentity().toString());
             
             proxy = ObjectProxyFactory.create(o, v, this);
@@ -644,13 +673,6 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
                 } else {
                     this.objectMapper.setFieldValue(proxy, field, innerO);
                 }
-
-                // crear un link entre los dos objetos.
-                MutableEdge oe = v.newEdge(graphRelationName, ((IObjectProxy) innerO).___getVertex());
-                oe.save();
-                if (this.isAuditing()) {
-                    this.auditLog((IObjectProxy) proxy, Audit.AuditType.WRITE, "STORE: " + graphRelationName, oe);
-                }
             }
 
             /* 
@@ -675,6 +697,7 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
                     // crear un objeto de la colección correspondiente para poder trabajarlo
                     // Class<?> oColection = oClassDef.linkLists.get(field);
                     Collection innerCol = (Collection) value;
+                    List managedList = new ArrayList();
 
                     // recorrer la colección verificando el estado de cada objeto.
                     LOGGER.log(Level.DEBUG, "Nueva lista: {}: {} elementos", new Object[]{graphRelationName, innerCol.size()});
@@ -694,62 +717,56 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
                         } else {
                             ioproxied = (IObjectProxy) llO;
                         }
+                        managedList.add(ioproxied);
+                    }
 
-                        // crear un link entre los dos objetos.
-                        LOGGER.log(Level.DEBUG, "-----> agregando un edge a: {}", ioproxied.___getVertex().getIdentity());
-                        MutableEdge oe = v.newEdge(graphRelationName, ioproxied.___getVertex());
-                        oe.save();
-                        if (this.isAuditing()) {
-                            this.auditLog((IObjectProxy) proxy, Audit.AuditType.WRITE, "STORE: " + graphRelationName, oe);
+                    // convertir la colección a Lazy para futuras referencias.
+                    this.objectMapper.collectionToLazy(proxy, field, v, this);
+                    Field listF = oClassDef.fieldsObject.get(field);
+                    try {
+                        listF.setAccessible(true);
+                        Object lazyCol = listF.get(proxy);
+                        if (lazyCol instanceof Collection) {
+                            ((Collection) lazyCol).addAll(managedList);
                         }
+                    } catch (Exception ex) {
+                        LOGGER.log(Level.ERROR, "Error poblando coleccion Lazy: {}", ex.getMessage());
                     }
                 } else if (value instanceof Map) {
-                    HashMap innerMap = (HashMap) value;
-                    innerMap.forEach(new BiConsumer() {
-                        @Override
-                        public void accept(Object imk, Object imV) {
-                            // para cada entrada, verificar la existencia del objeto y crear un Edge.
-                            IObjectProxy ioproxied;
+                    Map innerMap = (Map) value;
+                    Map managedMap = new HashMap();
+                    innerMap.forEach((imk, imV) -> {
+                        // para cada entrada, verificar la existencia del objeto y crear un Edge.
+                        IObjectProxy ioproxied;
 
-                            // verificar si ya no se había guardardo
-                            Object imO = storedObjects.get(imV);
-                            // si no es así, recuperar el valor del campo
-                            if (imO == null) {
-                                imO = imV;
-                            }
-                            if (imO instanceof IObjectProxy) {
-                                ioproxied = (IObjectProxy) imO;
-                            } else {
-                                LOGGER.log(Level.DEBUG, "Link Map Object nuevo. Crear un vértice y un link");
-                                ioproxied = (IObjectProxy) store(imO);
-                            }
-                            // crear un link entre los dos objetos.
-                            LOGGER.log(Level.DEBUG, "-----> agregando el edges de {} para {} key: {}", new Object[]{v.getIdentity().toString(), ioproxied.___getVertex().toString(), imk});
-                            //Edge oe = arcadedbTransact.newEdge(v, ioproxied.___getVertex(), graphRelationName);
-                            MutableEdge oe  = v.newEdge(graphRelationName, ioproxied.___getVertex().getIdentity());
-                            if (isAuditing()) {
-                                auditLog((IObjectProxy) finalProxy, Audit.AuditType.WRITE, "STORE: " + graphRelationName, oe);
-                            }
-                            // agragar la key como atributo.
-                            if (Primitives.PRIMITIVE_MAP.get(imk.getClass()) != null) {
-                                LOGGER.log(Level.DEBUG, "la prop del edge es primitiva");
-                                // es una primitiva, agregar el valor como propiedad
-                                oe.set("key", imk);
-                            } else {
-                                LOGGER.log(Level.DEBUG, "la prop del edge es un Objeto. Se debe mapear!! ");
-                                // mapear la key y asignarla como propiedades
-//                                objectMapper.simpleMap(imk).entrySet().stream().forEach(entry -> {
-//                                    oe.set(entry.getKey(),entry.getValue());
-//                                });
-                                oe.set(objectMapper.simpleMap(imk));
-                            }
-                            oe.save();
+                        // verificar si ya no se había guardardo
+                        Object imO = storedObjects.get(imV);
+                        // si no es así, recuperar el valor del campo
+                        if (imO == null) {
+                            imO = imV;
                         }
+                        if (imO instanceof IObjectProxy) {
+                            ioproxied = (IObjectProxy) imO;
+                        } else {
+                            LOGGER.log(Level.DEBUG, "Link Map Object nuevo. Crear un vértice y un link");
+                            ioproxied = (IObjectProxy) store(imO);
+                        }
+                        managedMap.put(imk, ioproxied);
                     });
 
+                    // convertir la colección a Lazy para futuras referencias.
+                    this.objectMapper.collectionToLazy(proxy, field, v, this);
+                    Field mapF = oClassDef.fieldsObject.get(field);
+                    try {
+                        mapF.setAccessible(true);
+                        Object lazyMap = mapF.get(proxy);
+                        if (lazyMap instanceof Map) {
+                            ((Map) lazyMap).putAll(managedMap);
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.log(Level.ERROR, "Error poblando map Lazy: {}", ex.getMessage());
+                    }
                 }
-                // convertir la colección a Lazy para futuras referencias.
-                this.objectMapper.collectionToLazy(proxy, field, v, this);
             }
 
             // guardar el objeto en el cache. Se usa el RID como clave
@@ -761,7 +778,11 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
             }
             
             // grabar!
-            v.save();
+            if (this.arcadedbTransact.isTransactionActive()) {
+                v.save();
+            } else {
+                ((IObjectProxy) proxy).___setDirty();
+            }
 
         } catch (IllegalArgumentException ex) {
             LOGGER.log(Level.ERROR, "ERROR",ex);
@@ -1046,6 +1067,10 @@ public class Transaction implements IActions.IStore, IActions.IGet, IActions.IQu
         if (toRemove instanceof IObjectProxy) {
             // verificar que la integridad referencial no se viole.
             Vertex ovToRemove = ((IObjectProxy) toRemove).___getVertex();
+            if (ovToRemove.getIdentity() != null && ovToRemove.getIdentity().getBucketId() < 0) {
+                LOGGER.log(Level.DEBUG, "internalDelete: objeto con RID temporal {} no persistido en BD, omitiendo.", ovToRemove.getIdentity());
+                return;
+            }
             String logRidToRemove = ovToRemove.getIdentity().toString();
             
             // reacargar preventivamente el objeto.

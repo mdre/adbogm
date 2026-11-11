@@ -813,7 +813,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
             oStruct.removedProperties.forEach(prop -> this.___baseElement.modify().remove(prop));
             
             // guardar log de auditoría si corresponde.
-            if (this.___transaction.isAuditing()) {
+            if (this.___transaction.isAuditing() && !this.___isNew()) {
                 this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "UPDATE", omap);
             }
 
@@ -883,6 +883,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
 
                                 LOGGER.log(Level.DEBUG, "Agregar un link entre dos objetos existentes.");
                                 MutableEdge oe = ov.newEdge(graphRelationName, ((IObjectProxy) innerO).___getVertex());
+                                oe.save();
 
                                 if (this.___transaction.isAuditing()) {
                                     this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "ADD LINK: " + graphRelationName, oe);
@@ -919,6 +920,7 @@ public class ObjectProxy implements IObjectProxy, IEasyProxyInterceptor {
 
                             //MutableEdge oe = this.___transaction.getCurrentGraphDb().addEdge("class:" + graphRelationName, ov, ((IObjectProxy) innerO).___getVertex(), graphRelationName);
                             MutableEdge oe = ov.newEdge(graphRelationName, ((IObjectProxy) innerO).___getVertex());
+                            oe.save();
                             if (this.___transaction.isAuditing()) {
                                 this.___transaction.auditLog(this, AuditType.WRITE, (this.___auditLogLabel != null ? this.___auditLogLabel + " : " : "") + "ADD LINK: " + graphRelationName, oe);
                             }

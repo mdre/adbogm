@@ -128,6 +128,7 @@ public class QueryTest {
      */
     @Test
     public void listQuery() throws Exception {
+        sm.getDBTx().execute("sql", "delete from FooNode where text in ['test list query', 'excluded']");
         Foo foo = new Foo("test list query");
         foo.add(new SimpleVertex("related vertex"));
         foo = sm.store(foo); //debe ir en los resultados

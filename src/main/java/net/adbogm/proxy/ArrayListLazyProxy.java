@@ -77,6 +77,9 @@ public class ArrayListLazyProxy extends ArrayList implements ILazyCollectionCall
             this.field = field;
             this.fieldClass = c;
             this.direction = d;
+            if (parent != null && parent.___isNew()) {
+                this.lazyLoad = false;
+            }
             LOGGER.log(Level.DEBUG, "relatedTo: {} - field: {} - Class: {}", new Object[]{relatedTo, field, c.getSimpleName()});
             //LOGGER.log(Level.DEBUG, "relatedTo.getGraph : " + relatedTo.getGraph());
         } catch (Exception ex) {
